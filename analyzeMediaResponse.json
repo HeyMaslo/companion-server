@@ -1,0 +1,67 @@
+{
+  "originMediaID": "062fea4d-efdd-4a7f-92b1-4039503efd5b",
+  "mediaID": "3919454996583158882",
+  "scenes": [
+    "travel photo",
+    "outside"
+  ],
+  "timeOfDay": "morning",
+  "emotionTags": [
+    "sad",
+    "happy",
+    "laughing"
+  ],
+  "sentiment": "0.6",
+  "facialExpressions": [
+    "smiling",
+    "frowning",
+    "anger",
+    "surprise"
+  ],
+  "faceCount": "4",
+  "personsCount": "4",
+  "personsClothed": "0.8",
+  "mediaImageResolution": {
+    "height": "1000",
+    "width": "1000"
+  },
+  "mediaFileSize": "23432",
+  "mediaDominantColors": [
+    "#FFFFFF",
+    "#EEEEEE"
+  ],
+  "mediaCompressionSize": "120",
+  "mediaVisualFocus": [
+    "blurry"
+  ],
+  "mediaEstimatedCreationDate": "2018",
+  "mediaInterestingness": "0.3",
+  "primarySubjectFaceVisible": "0.6",
+  "secondarySubjectFaceVisible": "0.6",
+  "isAnimal": [
+    {
+      "tiger": "25%"
+    }
+  ],
+  "primarySubjectGender": "female",
+  "pose": [
+    "selfie",
+    "front",
+    "side",
+    "fullbody",
+    "etc"
+  ],
+  "compositiom": [
+    "rule of thirds",
+    "portrait",
+    "landscape",
+    "etc"
+  ],
+  "photoManipulation": "0.7",
+  "photoFilter": [
+    "instagram",
+    "snapchat",
+    "photoshop",
+    "unrecognized"
+  ]
+}
