@@ -1,4 +1,4 @@
-# Maslo Companion Server
+# @heymaslo/companionserver
 
 ![](https://cdn-images-1.medium.com/max/1600/1*Gm7A7w4vJZeNXKHJQxhq7Q.gif)
 
