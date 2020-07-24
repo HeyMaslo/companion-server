@@ -24,13 +24,16 @@ API endpoint: /analyzeMedia  POST
 | ---------- | --------- | ----------- | ------- | ----- |
 | media | Required | Raw binary of file to be uploaded.  Can include multiple, each to be analyzed individually. |  | max size = 30MB/file, max 50 files per payload.  Limited to image files currently |
 | type | required | Type of media, as a backstop for mimetype detection problems.  values: image, video, audio. | "image" |  |
-| originMediaID |  | originMediaID to be passed back in response. (GUID) | 062fea4d-efdd-4a7f-92b1-4039503efd5b | @Russ, how to handle this being a GUID vs. originImageID being an INT? |
+| originMediaID |  | originMediaID to be passed back in response. (GUID) | 062fea4d-efdd-4a7f-92b1-4039503efd5b | GUID or INT |
 
-**Sample JSON:**  
+**Sample cURL Post:**  
 ```javascript
-media[] = POST BLOB
-type[] = image/jpg
-originMediaID[] = 062fea4d-efdd-4a7f-92b1-4039503efd5b
+
+curl --location --request POST 'http://localhost:8080/analyzeMedia' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'media=fileBlob' \
+--data-urlencode 'type=image/jpg' \
+--data-urlencode 'originalMediaID=sadfadsfasdfasdfasdf'
 
 ```
 
@@ -210,9 +213,9 @@ API endpoint: /analyzeText  POST
 | ---------- | --------- | ----------- | ------- | ----- |
 | text | required | Raw text to be analyzed |  |  |
 | type | required | Type of text--might be used later to perform different ML pipes.  Values can be [profile field name], text_message | "profile text" |  |
-| originTextID | required | TextID for passback with response | 123213432 | @Russ, can we standardize this somehow vs. the GUID originMediaID? |
+| originTextID | required | TextID for passback with response | 123213432 | GUID or INT|
 
-**Sample JSON:**  
+**Sample JSON to POST:**  
 ```javascript
 {
   "Request": [
@@ -228,6 +231,25 @@ API endpoint: /analyzeText  POST
     }
   ]
 }
+
+curl --location --request POST '' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "Request": [
+        {
+            "text": "text 1 to analyze",
+            "type": "essay",
+            "originTextID": 123213432
+        },
+        {
+            "text": "text 2 to analyze",
+            "type": "profile",
+            "originTextID": 123213433
+        }
+    ]
+}'
+
+
 ```
 
 ### Response:  
