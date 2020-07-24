@@ -1,10 +1,9 @@
-# Maslo Companion Server  
+# Maslo Companion Server
+
+![](https://cdn-images-1.medium.com/max/1600/1*Gm7A7w4vJZeNXKHJQxhq7Q.gif)
 
 version: 1.02  
-authors: Russel Foltz-Smith, Mark Ziler  
-  
-
-
+authors: Russel Foltz-Smith, Mark Ziler
 
 ## Overview  
 Maslo Companion Server is a set of signal processing APIs for numerous types of data  
