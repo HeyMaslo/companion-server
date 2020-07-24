@@ -5,7 +5,7 @@
 version: 1.02  
 authors: Russel Foltz-Smith, Mark Ziler
 
-## Overview  
+## Overview of the APIs
 Maslo Companion Server is a set of signal processing APIs for numerous types of data  
   
 Response formats: JSON  

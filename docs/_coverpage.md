@@ -8,7 +8,7 @@
 
 - Simple and lightweight
 - Multi-Modal Machine Learning Signal Processing
-- Runs in browser or can use server
+- Runs in browser (a very weird use case!) or can use server
 - Stateless - it just does things
 - Fun and Empathetic for use in making the world better
 
