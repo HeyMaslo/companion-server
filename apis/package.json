@@ -1,0 +1,28 @@
+{
+  "name": "fulfillment",
+  "version": "1.0.0",
+  "description": "maslo dialogflowfulfillment",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/language": "^4.1.0",
+    "@tensorflow/tfjs-node": "^2.0.1",
+    "body-parser": "^1.19.0",
+    "elizabot": "0.0.3",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.4",
+    "rita": "^1.3.94",
+    "unirest": "^0.6.0",
+    "wtf_wikipedia": "^8.3.0"
+  },
+  "engines": {
+    "node": "^12.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node .",
+    "dev": "nodemon .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
