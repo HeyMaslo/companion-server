@@ -12,6 +12,9 @@ head to the docs folder or https://heymaslo.github.io/companionserver/#/ for ful
 
 ### Containers and Installations
 
+Simple info on packaging up docker and node.  https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
+
+
 #### Private Clouds/Data Centers
 
 
