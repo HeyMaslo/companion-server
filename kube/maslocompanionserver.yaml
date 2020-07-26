@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maslocompanionserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maslocompanionserver
+  template:
+    metadata:
+      labels:
+        app: maslocompanionserver
+    spec:
+      containers:
+        - name: app
+          image: un1crom/maslo:1.0.0
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+      imagePullSecrets:
+        - name: regcred

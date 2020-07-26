@@ -1,18 +1,31 @@
 const express = require('express');
 const unirest = require('unirest');
 const bodyParser = require('body-parser');
-const ElizaBot = require('elizabot');
+const multer = require('multer');
 const rita = require('rita');
-//const wtf = require('wtf_wikipedia')
 const qs = require('qs');
 const url = require('url');
+
+//this is where we get the POST form parser set up
+const upload = multer();
+
+//set app
 const app = express();
 
 //TENSORFLOW JS makes it easy to do cheap things with small things
 //https://www.npmjs.com/package/@tensorflow/tfjs-node
 const tf = require('@tensorflow/tfjs-node');
 
-// Imports the Google Cloud client library
+// Note: you do not need to import @tensorflow/tfjs here.
+//this is the Image Classification model
+const mobilenet = require('@tensorflow-models/mobilenet');
+
+
+
+
+
+
+// Imports the Google Cloud client library, this is not used in non cloud deploys
 const language = require('@google-cloud/language');
 
 
@@ -21,6 +34,7 @@ const language = require('@google-cloud/language');
 
 const port = 8080;
 
+/* BUILD OUT A BOOT PROCESS TO TEST EVERYTHING WITH AN INITIATION ROUTINE
 const model = tf.sequential();
 model.add(tf.layers.dense({ units: 1, inputShape: [200] }));
 model.compile({
@@ -47,36 +61,24 @@ async function train() {
   });
 }
 train();
-
-// --------------- IMPORTANT CODE PHILOSOPHY NOTE ------------------------------------//
-
-/*
-    @un1crom, the original author of this crazed code base is not a super big fan of
-    Test Driven Dev or really strict QA first approaches to code bases.  
-
-    why?
-    a) unless the code base deals with money transactions or life altering situations TTD is usually overkill in design phase
-    b) the universe is computationally irreducible so TTD is only going to catch the most trivial of design patterns
-    c) there's a lot of overhead to linting and all that stuff.
-    d) i tend to think functionally anyway and try to make super self contained small things that are expressive
-    e) try/catches are good though.  especially on weird async stuff
-    f) i'm too old and cranky to get all weird about it.  if you hate this code style then you'll change it
-    g) javascript is terrible anyway, one never knows what's really happening, so it's someone elses fault.
-    h) this is why i am always the first dev on a project AND NEVER THE LAST
-    i) never take my advice on anything important
-
 */
-
-/*TODOS and NOTES to SELF and SCRATCH PAD
-
-Get 
-*/
-
-// The Empathetic Engine Begins here
 
 //this is to help parse JSON apis and stuff
 
-app.use(bodyParser.json());
+// for parsing application/json
+app.use(bodyParser.json()); 
+
+// for parsing application/xwww-
+app.use(bodyParser.urlencoded({ extended: true })); 
+//form-urlencoded
+
+// for parsing multipart/form-data
+//app.use(upload.array()); 
+
+app.use(function (err, req, res, next) {
+  console.log('This is the invalid field ->', err.field)
+  next(err)
+})
 
 //this is what ya get if ya hit the root end point
 app.get('/', (req, res) => res.send('Hey! I am maslo!'));
@@ -84,10 +86,13 @@ app.get('/', (req, res) => res.send('Hey! I am maslo!'));
 
 //very simple get API to show off the analyzeText JSON
 app.get('/getJSON', function (req, res) {
+
+//helper calcs
 var dNow=Date.now();
 var yMod=13;
 var d = new Date();
 var n = d.getHours();
+
   var outJSON =
   {
     "originMediaID": "062fea4d-efdd-4a7f-92b1-4039503efd5b",
@@ -213,7 +218,7 @@ res.json(outJSON);
 }
 );
 
-//useful function
+//useful function for text processing
 var capitalize = (s) => {
   if (typeof s !== 'string') return ''
   return s.charAt(0).toUpperCase() + s.slice(1)
@@ -231,8 +236,43 @@ var getEntities = async function (request, response, next) {
 //This stays off for now...  until entities is replaced with a non google api
 //app.use(getEntities);
 
+//image parse
+var mediaParse = async function (img) {
+
+
+    // for getting the data images
+
+  const imgToParse = tf.node.decodePng(img,3);
+
+  // Object Classifications
+  // Load the model.
+  const model = await mobilenet.load();
+  
+  // Classify the image.
+  const predictions = await model.classify(imgToParse);
+  
+  console.log('Image Object Predictions: ');
+  console.log(predictions);
+
+
+
+};
+
+
 //analyzeMedia Post
-app.post('/analyzeMedia',function (req, res) {
+app.post('/analyzeMedia',upload.single('media'),function (req, res) {
+
+  //to handle included text use req.body
+  // multer docs https://github.com/expressjs/multer
+  //parse image and classify
+
+//console.log(req.file.buffer);
+//console.log(req.body);
+
+  var parsedMediaOut = mediaParse(req.file.buffer);
+  
+
+
   var dNow=Date.now();
   var yMod=13;
   var d = new Date();
@@ -362,7 +402,7 @@ app.post('/analyzeMedia',function (req, res) {
 
 });
 
-//analyzeMedia Post
+//analyzeText Post
 app.post('/analyzeText',function (req, res) {
   var dNow=Date.now();
   var yMod=13;
