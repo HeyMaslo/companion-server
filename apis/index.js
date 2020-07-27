@@ -5,6 +5,10 @@ const multer = require('multer');
 const rita = require('rita');
 const qs = require('qs');
 const url = require('url');
+//const fetch = require('node-fetch');
+global.fetch = require("node-fetch");
+const path = require('path');
+const tmImage = require('@teachablemachine/image');
 
 //this is where we get the POST form parser set up
 const upload = multer();
@@ -19,11 +23,25 @@ const tf = require('@tensorflow/tfjs-node');
 // Note: you do not need to import @tensorflow/tfjs here.
 //this is the Image Classification model
 const mobilenet = require('@tensorflow-models/mobilenet');
+require('@tensorflow/tfjs-backend-cpu');
+require('@tensorflow/tfjs-backend-webgl');
+const cocoSsd = require('@tensorflow-models/coco-ssd');
+const blazeface = require('@tensorflow-models/blazeface');
+const facemesh = require('@tensorflow-models/facemesh');
+const posenet = require('@tensorflow-models/posenet');
 
+// implements nodejs wrappers for HTMLCanvasElement, HTMLImageElement, ImageData
+const canvas= require('canvas');
 
+const faceapi=require('face-api.js');
 
-
-
+// patch nodejs environment, we need to provide an implementation of
+// HTMLCanvasElement and HTMLImageElement, additionally an implementation
+// of ImageData is required, in case you want to use the MTCNN
+const { Canvas, Image, ImageData } = canvas
+faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
+faceapi.env.monkeyPatch({ fetch: fetch });
+//tmImage.env.monkeyPatch({ fetch: fetch });
 
 // Imports the Google Cloud client library, this is not used in non cloud deploys
 const language = require('@google-cloud/language');
@@ -62,6 +80,9 @@ async function train() {
 }
 train();
 */
+
+//serve up models
+app.use(express.static('models'))
 
 //this is to help parse JSON apis and stuff
 
@@ -236,25 +257,116 @@ var getEntities = async function (request, response, next) {
 //This stays off for now...  until entities is replaced with a non google api
 //app.use(getEntities);
 
+//load up all the models for the app so each API call is fast
+var loadModels = async function (request, response, next) {
+  const MODELS_URL = path.join(__dirname, '/models');
+  console.log(MODELS_URL);
+  
+  /*
+  await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODELS_URL);
+// accordingly for the other models:
+  await faceapi.nets.tinyFaceDetector.loadFromDisk(MODELS_URL);
+  await faceapi.nets.mtcnn.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceLandmark68Net.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceLandmark68TinyNet.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceRecognitionNet.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceExpressionNet.loadFromDisk(MODELS_URL);
+  
+
+ await faceapi.loadSsdMobilenetv1Model('/models')
+ // accordingly for the other models:
+ // await faceapi.loadTinyFaceDetectorModel('/models')
+ // await faceapi.loadMtcnnModel('/models')
+ // await faceapi.loadFaceLandmarkModel('/models')
+ // await faceapi.loadFaceLandmarkTinyModel('/models')
+ // await faceapi.loadFaceRecognitionModel('/models')
+ // await faceapi.loadFaceExpressionModel('/models')
+*/
+  next();
+
+};
+
+app.use(loadModels);
+
 //image parse
 var mediaParse = async function (img) {
 
+    var analysisJSON=[];
 
     // for getting the data images
 
-  const imgToParse = tf.node.decodePng(img,3);
+  const imgToParse = tf.node.decodeImage(img,3);
 
-  // Object Classifications
+  // Image/Scene Classifications
   // Load the model.
   const model = await mobilenet.load();
   
   // Classify the image.
   const predictions = await model.classify(imgToParse);
   
-  console.log('Image Object Predictions: ');
+  console.log('Image Scene Predictions: ');
   console.log(predictions);
+  analysisJSON['scene'] = predictions;
+  //Object Detection
+
+    // Load the model.
+    const modelObjects = await cocoSsd.load();
+
+    // Classify the image.
+    const predictionsObjects = await modelObjects.detect(imgToParse);
+  
+    console.log('Image Object Predictions: ');
+    console.log(predictionsObjects);
+    analysisJSON['objects'] = predictionsObjects;
+
+  //posenet
+  const net = await posenet.load();
+
+  const predictionPose = await net.estimateSinglePose(imgToParse, {
+    flipHorizontal: false
+  });
+  console.log('PosePredictions: ');
+  console.log(predictionPose);
+  analysisJSON['pose'] = predictionPose;
+
+  //        
+  //const URL = path.join(__dirname, '/models/tm-faceemotion/');
+  const URL= "http://localhost:8080/tm-faceemotion/"
+  const modelURL = URL + "model.json";
+  const metadataURL = URL + "metadata.json";
+  const weightsURL = URL + "weights.bin";
+
+  // load the model and metadata
+  // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+  // or files from your local hard drive
+  // Note: the pose library adds "tmImage" object to your window (window.tmImage)
 
 
+  //face emotions - this is an older package that needs some
+          /*
+
+            expressionmodel = await tmImage.load(modelURL,metadataURL);
+  maxPredictions = expressionmodel.getTotalClasses();
+  const expressionprediction = await expressionmodel.predict(imgToParse);
+  console.log('expressionprediction: ');
+  console.log(expressionprediction);
+  analysisJSON['expressionprediction'] = expressionprediction;
+
+  
+          const detectionsWithExpressions = await faceapi.detectSingleFace(imgToParse).withFaceExpressions();
+          console.log('face expressions: ');
+          console.log(detectionsWithExpressions);
+          analysisJSON['faceExpressions'] = detectionsWithExpressions;
+
+            //face emotions
+          
+            const ageGender = await faceapi.detectSingleFace(imgToParse).withAgeAndGender;
+            console.log('face ageGender: ');
+            console.log(ageGender);
+            analysisJSON['ageGender'] = ageGender;
+        */
+  //spit it all out
+  console.log(analysisJSON);
 
 };
 

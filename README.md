@@ -12,6 +12,32 @@ Original server was using lower level code with WolframEngine, python, tensorflo
 
 head to the docs folder or https://heymaslo.github.io/companionserver/#/ for full documentation on the APIs
 
+### What Are The Algos?
+Machine Learning models :)... documentation on each one here:  
+
+Default
+Image Scene: https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
+Object Detection: https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
+Body Landmarks: https://github.com/tensorflow/tfjs-models/tree/master/body-pix
+Body Post: https://github.com/tensorflow/tfjs-models/tree/master/posenet
+Text Toxicity: https://github.com/tensorflow/tfjs-models/tree/master/toxicity
+Face Detection: https://github.com/tensorflow/tfjs-models/tree/master/blazeface
+Image Segmentation: https://github.com/tensorflow/tfjs-models/tree/master/deeplab
+Faceland Mark Detection: https://github.com/tensorflow/tfjs-models/tree/master/facemesh
+Hand pose: https://github.com/tensorflow/tfjs-models/tree/master/handpose
+Emotions and More: https://justadudewhohacks.github.io/face-api.js/docs/index.html#getting-started-nodejs
+Face Data: http://shuoyang1213.me/WIDERFACE/
+
+note:  To speed things up dramatically, install our node backend, which binds to TensorFlow C++, by running npm i @tensorflow/tfjs-node, or npm i @tensorflow/tfjs-node-gpu if you have CUDA. Then call require('@tensorflow/tfjs-node'); (-gpu suffix for CUDA) at the start of your program. Visit https://github.com/tensorflow/tfjs-node for more details.
+
+this is an optional advanced thing:
+https://github.com/justadudewhohacks/opencv4nodejs#examples
+
+Facial Expression Data: R Vemulapalli, A Agarwala, “A Compact Embedding for Facial Expression Similarity”, CoRR, abs/1811.11283, 2018.
+
+https://lionbridge.ai/datasets/5-million-faces-top-15-free-image-datasets-for-facial-recognition/
+
+
 ### Containers and Installations
 
 Simple info on packaging up docker and node.  https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
@@ -24,15 +50,19 @@ basic image build of app/models:
 
 tag build for dockerhub push:
 
-    docker tag un1crom/maslocompanionserver:latest un1crom/maslo:1.0.0
+    docker tag un1crom/maslocompanionserver:latest un1crom/maslocompanionserver:1.0.1
 
 push to docker hub
 
-    docker push un1crom/maslo:1.0.0
+    docker push un1crom/maslocompanionserver:1.0.1
 
 run from dockerhub
 
-    docker run un1crom/maslo:1.0.0
+    docker run un1crom/maslocompanionserver:1.0.1
+
+pull from docker
+
+    docker pull un1crom/maslocompanionserver:1.0.1
 
 
 #### Private Clouds/Data Centers
