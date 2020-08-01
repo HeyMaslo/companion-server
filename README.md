@@ -15,8 +15,12 @@ head to the docs folder or https://heymaslo.github.io/companionserver/#/ for ful
 ### What Are The Algos?
 Machine Learning models :)... documentation on each one here:  
 
+
+
 Default
-Image Scene: https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
+
+Mostly Tensflow
+* Image Scene: https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
 Object Detection: https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
 Body Landmarks: https://github.com/tensorflow/tfjs-models/tree/master/body-pix
 Body Post: https://github.com/tensorflow/tfjs-models/tree/master/posenet
@@ -27,6 +31,17 @@ Faceland Mark Detection: https://github.com/tensorflow/tfjs-models/tree/master/f
 Hand pose: https://github.com/tensorflow/tfjs-models/tree/master/handpose
 Emotions and More: https://justadudewhohacks.github.io/face-api.js/docs/index.html#getting-started-nodejs
 Face Data: http://shuoyang1213.me/WIDERFACE/
+
+Some AutoML models loaded into tensorflow
+https://cloud.google.com/blog/products/gcp/how-to-classify-images-with-tensorflow-using-google-cloud-machine-learning-and-cloud-dataflow
+https://cloud.google.com/vision/automl/docs/edge-quickstart
+https://github.com/tensorflow/tfjs/tree/master/tfjs-automl
+https://cloud.google.com/vision/automl/docs/tensorflow-js-tutorial
+* https://heartbeat.fritz.ai/automl-vision-edge-loading-and-running-a-tensorflow-js-model-part-2-9b4d62a7d5cc
+
+and some Onxy
+https://github.com/Microsoft/onnxjs
+
 
 note:  To speed things up dramatically, install our node backend, which binds to TensorFlow C++, by running npm i @tensorflow/tfjs-node, or npm i @tensorflow/tfjs-node-gpu if you have CUDA. Then call require('@tensorflow/tfjs-node'); (-gpu suffix for CUDA) at the start of your program. Visit https://github.com/tensorflow/tfjs-node for more details.
 
