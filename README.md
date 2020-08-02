@@ -32,6 +32,8 @@ Hand pose: https://github.com/tensorflow/tfjs-models/tree/master/handpose
 Emotions and More: https://justadudewhohacks.github.io/face-api.js/docs/index.html#getting-started-nodejs
 Face Data: http://shuoyang1213.me/WIDERFACE/
 
+MediaPipe: https://github.com/google/mediapipe/tree/master/mediapipe/models
+
 Some AutoML models loaded into tensorflow
 https://cloud.google.com/blog/products/gcp/how-to-classify-images-with-tensorflow-using-google-cloud-machine-learning-and-cloud-dataflow
 https://cloud.google.com/vision/automl/docs/edge-quickstart
@@ -42,6 +44,9 @@ https://cloud.google.com/vision/automl/docs/tensorflow-js-tutorial
 and some Onxy
 https://github.com/Microsoft/onnxjs
 
+Gemder Model:
+https://github.com/bharathvaj1995/gender-detection-tensorflowjs
+
 
 note:  To speed things up dramatically, install our node backend, which binds to TensorFlow C++, by running npm i @tensorflow/tfjs-node, or npm i @tensorflow/tfjs-node-gpu if you have CUDA. Then call require('@tensorflow/tfjs-node'); (-gpu suffix for CUDA) at the start of your program. Visit https://github.com/tensorflow/tfjs-node for more details.
 
@@ -51,6 +56,14 @@ https://github.com/justadudewhohacks/opencv4nodejs#examples
 Facial Expression Data: R Vemulapalli, A Agarwala, “A Compact Embedding for Facial Expression Similarity”, CoRR, abs/1811.11283, 2018.
 
 https://lionbridge.ai/datasets/5-million-faces-top-15-free-image-datasets-for-facial-recognition/
+
+Some very fun shadow detection/time of day stuff:
+https://research.cs.cornell.edu/shadows/files/wehrwein_3dv15_shadows.pdf
+https://github.com/ivclab/Day_Night_dataset_list
+
+#### libraries/thinks worth worth knowing about
+
+https://meowni.ca/posts/on-tfjs-datasync/
 
 
 ### Containers and Installations
