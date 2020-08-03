@@ -1,3 +1,4 @@
+// Basic libraries for nodejs, express application
 const express = require('express');
 const unirest = require('unirest');
 const bodyParser = require('body-parser');
@@ -8,51 +9,126 @@ const url = require('url');
 //const fetch = require('node-fetch');
 global.fetch = require("node-fetch");
 const path = require('path');
-const automl = require("@tensorflow/tfjs-automl");
 const fs = require("fs");
-const tmImage = require('@teachablemachine/image');
-const onnxjs = require('onnxjs');
-require("onnxjs-node");
 const assert = require('assert');
+
+//traditional image processing and other media helpers
 const { Image } = require('image-js');
 const ce = require('colour-extractor');
 const gm = require('gm');
 const ColorThief = require('color-thief');
 var Jimp = require('jimp');
 const zlib = require('zlib');
-//this is where we get the POST form parser set up
-const upload = multer();
+const jpeg = require('jpeg-js');
+const jsfeat = require('jsfeat');
 
-//set app
-const app = express();
 
 //TENSORFLOW JS makes it easy to do cheap things with small things
-//https://www.npmjs.com/package/@tensorflow/tfjs-node
+// https://www.npmjs.com/package/@tensorflow/tfjs-node
+// get almost any kind of model you want here: https://tfhub.dev/
+// the harder work, of course, is in the choices of integration and synthesis.
 
+
+// Tensorflow kernels and libraries
 const tfN = require('@tensorflow/tfjs');
 const tf = require('@tensorflow/tfjs-node');
 require('@tensorflow/tfjs-backend-cpu');
 require('@tensorflow/tfjs-backend-webgl');
 const { image } = require('@tensorflow/tfjs-node');
+const automl = require("@tensorflow/tfjs-automl");
+const tfconv = require('@tensorflow/tfjs-converter');
 
-// Note: you do not need to import @tensorflow/tfjs here.
-//this is the Image Classification model
+//non-Tensorflow ML libraries
+const tmImage = require('@teachablemachine/image');
+const onnxjs = require('onnxjs');
+require("onnxjs-node");
+
+// Tensflow trained models.
+//NOTE THAT SOME OF THESE ACCESS THE INTERNET BY DEFAULT.  Change that.
 const mobilenet = require('@tensorflow-models/mobilenet');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
 const blazeface = require('@tensorflow-models/blazeface');
 const facemesh = require('@tensorflow-models/facemesh');
 const posenet = require('@tensorflow-models/posenet');
-
-// implements nodejs wrappers for HTMLCanvasElement, HTMLImageElement, ImageData
-const canvas= require('canvas');
+const nsfw = require('nsfwjs');
 
 
+//we need to get all the models loaded up on BOOT, not run time.  the models dont change request to request.  (though there is a case to be made to not boot a giant set of things into memory)
+const deeplab = require('@tensorflow-models/deeplab');
+
+// this is how we can swap out for LOCAL models, not internet ones.  so download them and bring them in locally
+const loadModelDeepLab = async () => {
+  const modelName = 'pascal';   // set to your preferred model, either `pascal`, `cityscapes` or `ade20k`
+  const quantizationBytes = 2;  // either 1, 2 or 4
+  const url = 'https://tfhub.dev/tensorflow/tfjs-model/deeplab/pascal/1/default/1/model.json?tfjs-format=file';
+  return await deeplab.load({modelUrl: url,base: modelName, quantizationBytes});
+};
+
+//load Deeplab
+loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
+
+const imageSegmentation = async (imageParse) => {
+        console.log(imageParse);
+        //console.log(loadModelDeepLab);
+
+        //for now we are just passing back the segments and "colors", but we should pass back the map itself.
+       return await loadModelDeepLab()
+            .then((model) => model.segment(imageParse))
+             .then(
+            ({legend}) =>
+               // console.log(`The predicted classes are ${JSON.stringify(legend)}`);
+                legend
+                );
+        /* if we want to return the segmentation map
+               return await loadModelDeepLab()
+            .then((model) => model.segment(imageParse))
+             .then(
+            (segmentationMap) =>
+               // console.log(`The predicted classes are ${JSON.stringify(legend)}`);
+                segmentationMap
+                );
+        */
+        //return await loadModelDeepLab.model.segment(imageParse);
+    }
+
+
+
+const loadModelsOld = async function (modelURL,request, response) {
+  const MODELS_URL = path.join(__dirname, '/models');
+  console.log(MODELS_URL);
+
+  
+  
+  /*
+  await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODELS_URL);
+// accordingly for the other models:
+  await faceapi.nets.tinyFaceDetector.loadFromDisk(MODELS_URL);
+  await faceapi.nets.mtcnn.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceLandmark68Net.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceLandmark68TinyNet.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceRecognitionNet.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceExpressionNet.loadFromDisk(MODELS_URL);
+  
+
+ await faceapi.loadSsdMobilenetv1Model('/models')
+ // accordingly for the other models:
+ // await faceapi.loadTinyFaceDetectorModel('/models')
+ // await faceapi.loadMtcnnModel('/models')
+ // await faceapi.loadFaceLandmarkModel('/models')
+ // await faceapi.loadFaceLandmarkTinyModel('/models')
+ // await faceapi.loadFaceRecognitionModel('/models')
+ // await faceapi.loadFaceExpressionModel('/models')
+*/
+
+};
 
 // patch nodejs environment, we need to provide an implementation of
 // HTMLCanvasElement and HTMLImageElement, additionally an implementation
 // of ImageData is required, in case you want to use the MTCNN
 
 //FACE API is a useful face algo, but it doesn't play nice with TF 2.0
+// implements nodejs wrappers for HTMLCanvasElement, HTMLImageElement, ImageData
+const canvas= require('canvas');
 const faceapi=require('face-api.js');
 const { Canvas, ImageData } = canvas
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
@@ -64,6 +140,15 @@ const language = require('@google-cloud/language');
 const { response } = require('express');
 const { parse } = require('path');
 
+
+//Final Express Application constants/variables
+
+
+//this is where we get the POST form parser set up
+const upload = multer();
+
+//set app
+const app = express();
 
 
 //gotta do this port for Google App Engine, yo!  This can be changed for other situations/on prem
@@ -99,6 +184,8 @@ async function train() {
 train();
 */
 
+
+// MIDDLE WARE and ROUTE HANDLING
 //serve up models
 app.use(express.static('models'))
 
@@ -119,14 +206,96 @@ app.use(function (err, req, res, next) {
   next(err)
 })
 
-app.use(function(request, response, next){
-  response.setTimeout(5000, function(){
-      // call back function is called when request timed out.
-      response.locals.analysisComplete=true;
-  });
-  next();
-});
+//useful function for text processing
+var capitalize = (s) => {
+  if (typeof s !== 'string') return ''
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 
+
+//entity middleware function to do a full query parse into the semantic query we want.  
+//https://googleapis.dev/nodejs/language/latest/index.html
+var getEntities = async function (request, response, next) {
+
+  next();
+
+};
+
+//This stays off for now...  until entities is replaced with a non google api
+//app.use(getEntities);
+
+//load up all the models for the app so each API call is fast
+var loadModelsVeryOld = async function (request, response, next) {
+  const MODELS_URL = path.join(__dirname, '/models');
+  console.log(MODELS_URL);
+
+  
+  
+  /*
+  await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODELS_URL);
+// accordingly for the other models:
+  await faceapi.nets.tinyFaceDetector.loadFromDisk(MODELS_URL);
+  await faceapi.nets.mtcnn.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceLandmark68Net.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceLandmark68TinyNet.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceRecognitionNet.loadFromDisk(MODELS_URL);
+  await faceapi.nets.faceExpressionNet.loadFromDisk(MODELS_URL);
+  
+
+ await faceapi.loadSsdMobilenetv1Model('/models')
+ // accordingly for the other models:
+ // await faceapi.loadTinyFaceDetectorModel('/models')
+ // await faceapi.loadMtcnnModel('/models')
+ // await faceapi.loadFaceLandmarkModel('/models')
+ // await faceapi.loadFaceLandmarkTinyModel('/models')
+ // await faceapi.loadFaceRecognitionModel('/models')
+ // await faceapi.loadFaceExpressionModel('/models')
+*/
+  next();
+
+};
+
+//app.use(loadModels);
+
+
+//HELPER FUNCTIONS FOR SOME MODELS
+function loadModelOld() {
+  tf.load
+	return tf.loadModel('gender/model.json');
+}
+
+function saveModelToLocalStorage(model) {
+	return model.save('localstorage://model');
+}
+
+function predict(tensor, model) {
+	return model.predict(tensor);
+}
+
+function preprocessTensor(imageData) {
+		let tensor = tf.browser.fromPixels(imageData);
+		tensor = tf.cast(tensor, 'int32');
+		tensor = tensor.div(255.0);
+		tensor = tensor.expandDims(0);
+		return tensor;
+}
+
+const convert = async (img) => {
+  // Decoded image in UInt8 Byte array
+  const image = await jpeg.decode(img, true)
+
+  const numChannels = 3
+  const numPixels = image.width * image.height
+  const values = new Int32Array(numPixels * numChannels)
+
+  for (let i = 0; i < numPixels; i++)
+    for (let c = 0; c < numChannels; ++c)
+      values[i * numChannels + c] = image.data[i * 4 + c]
+
+  return tf.tensor3d(values, [image.height, image.width, numChannels], 'int32')
+}
+
+// REQUEST HANDLERS
 //this is what ya get if ya hit the root end point
 app.get('/', (req, res) => res.send('Hey! I am maslo!'));
 
@@ -265,83 +434,6 @@ res.json(outJSON);
 }
 );
 
-//useful function for text processing
-var capitalize = (s) => {
-  if (typeof s !== 'string') return ''
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
-
-//entity middleware function to do a full query parse into the semantic query we want.  
-//https://googleapis.dev/nodejs/language/latest/index.html
-var getEntities = async function (request, response, next) {
-
-  next();
-
-};
-
-//This stays off for now...  until entities is replaced with a non google api
-//app.use(getEntities);
-
-//load up all the models for the app so each API call is fast
-var loadModels = async function (request, response, next) {
-  const MODELS_URL = path.join(__dirname, '/models');
-  console.log(MODELS_URL);
-
-  
-  
-  /*
-  await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODELS_URL);
-// accordingly for the other models:
-  await faceapi.nets.tinyFaceDetector.loadFromDisk(MODELS_URL);
-  await faceapi.nets.mtcnn.loadFromDisk(MODELS_URL);
-  await faceapi.nets.faceLandmark68Net.loadFromDisk(MODELS_URL);
-  await faceapi.nets.faceLandmark68TinyNet.loadFromDisk(MODELS_URL);
-  await faceapi.nets.faceRecognitionNet.loadFromDisk(MODELS_URL);
-  await faceapi.nets.faceExpressionNet.loadFromDisk(MODELS_URL);
-  
-
- await faceapi.loadSsdMobilenetv1Model('/models')
- // accordingly for the other models:
- // await faceapi.loadTinyFaceDetectorModel('/models')
- // await faceapi.loadMtcnnModel('/models')
- // await faceapi.loadFaceLandmarkModel('/models')
- // await faceapi.loadFaceLandmarkTinyModel('/models')
- // await faceapi.loadFaceRecognitionModel('/models')
- // await faceapi.loadFaceExpressionModel('/models')
-*/
-  next();
-
-};
-
-//app.use(loadModels);
-
-
-//HELPER FUNCTIONS FOR SOME MODELS
-function loadModel() {
-  tf.load
-	return tf.loadModel('gender/model.json');
-}
-
-function saveModelToLocalStorage(model) {
-	return model.save('localstorage://model');
-}
-
-function predict(tensor, model) {
-	return model.predict(tensor);
-}
-
-function preprocessTensor(imageData) {
-	return resizeImage(imageData).then(canvas => {
-		let tensor = tf.fromPixels(canvas);
-		tensor = tf.cast(tensor, 'float32');
-		tensor = tensor.div(255.0);
-		tensor = tensor.expandDims(0);
-		return tensor;
-	});
-}
-
-
 //PARSE AND ANALYZE THE IMAGE
 var mediaParse = async function (img, request, response) {
   
@@ -350,6 +442,8 @@ var mediaParse = async function (img, request, response) {
 
   response.setTimeout(7000, function(){
     // call back function is called when request timed out.
+      //memory manage a bit
+  imgToParse.dispose();
     response.locals.analysisComplete=true;
     response.send(408);
     });
@@ -480,6 +574,8 @@ var analysisJSON= {};
 
 console.log(request.body);
 
+
+
 //RESPOND BACK WITH ORIGINAL MEDIA ID
 analysisJSON['originMediaID']=request.body.originMediaID;
 analysisJSON['mediaID']=Date.now();
@@ -488,13 +584,33 @@ analysisJSON['mediaID']=Date.now();
 // CONVERT IMAGE BUFFER FOR TENSORFLOW
 
   const imgToParse = tf.node.decodeImage(img,3);
-  const imgToParse4D = tf.node.decodeImage(img,3);
+ // const imgToParse4D = tf.node.decodeImage(img,3);
 
 //GET BASIC INFO ABOUT THE IMAGE
   //first the basics of image processing
   //https://image-js.github.io/image-js/#imagecomponents
 
   let imageBasics = await Image.load(img);
+
+  /* This is too slow
+//TESTING JS FEAT
+
+//context2d.drawImage(video, 0, 0, width, height);
+//var image_data = context2d.getImageData(0, 0, width, height);
+var image_data = imageBasics;
+var gray_img = new jsfeat.matrix_t(imageBasics.width, imageBasics.height, jsfeat.U8_t | jsfeat.C1_t);
+var code = jsfeat.COLOR_RGBA2GRAY;
+var jsFeatOut={}
+jsFeatOut=await jsfeat.imgproc.grayscale(image_data, imageBasics.width, imageBasics.height, gray_img, code);
+analysisJSON['imageLines']=jsFeatOut;
+var matrix = new jsfeat.matrix_t(2,2, jsfeat.U8_t | jsfeat.C1_t);
+matrix.data[1] = 4; 
+console.log(matrix.data[1]);
+
+console.log("jsfeat: " + jsFeatOut);
+*/
+
+
   //console.log(imageBasics.getHistograms());
 
       var ct = new ColorThief();
@@ -531,6 +647,9 @@ analysisJSON['mediaID']=Date.now();
         "salience": 0.88
       };
 
+      //had to force something in the deeplap tensorflow library... so watch out.
+      analysisJSON['imageSegmentation']= await imageSegmentation(imgToParse);
+
       //estimated year of photo
       analysisJSON['mediaEstimatedCreationDate']= 2018;
 
@@ -538,6 +657,15 @@ analysisJSON['mediaID']=Date.now();
 
   // Image/Scene Classifications
   // Load the model.
+
+  //const mn = mobilenet;
+  //mn.modelURL = `file://./models/mobilenet/model.json`
+  //const model= await mn.load({"modelUrl":"http://localhost:8080/mobilenet/model.json"})
+  //const model = await mobilenet.load('file://./models/mobilenet/model.json');
+
+  //const model = await tf.loadGraphModel('file://./models/mobilenet/model.json',{size:224})
+
+  //had to get these to be local mobilenet pick ups...  
 
   const model = await mobilenet.load();
   
@@ -563,6 +691,17 @@ analysisJSON['mediaID']=Date.now();
 
 //GET PERSON AND IS ANIMAL COUNTS
 
+const nsfwModel = await nsfw.load('file://./models/nsfw/',{size: 299}) // To load a local model, nsfw.load('file://./path/to/model/')
+// Image must be in tf.tensor3d format
+// you can convert image to tf.tensor3d with tf.node.decodeImage(Uint8Array,channels)
+
+//const imageNSFW =  tf.node.decodeImage(personCrop.toBuffer({"format":"jpeg"}),3);
+//const imageNSFW = convert(img);
+const nsfwPredictions =  nsfwModel.classify(imgToParse)
+analysisJSON['nsfw']=nsfwPredictions;
+//imageNSFW.dispose() // Tensor memory must be managed explicitly (it is not sufficient to let a tf.Tensor go out of scope for its memory to be released).
+console.log(nsfwPredictions)
+
 var objectClasses={};
 var isAnimal={}
 predictionsObjects.forEach(function(v) {
@@ -573,7 +712,7 @@ predictionsObjects.forEach(function(v) {
   if(v.class =='cat' || v.class =='dog' || v.class =='horse'){
     isAnimal=v;
   }
-
+  j=0;
   if(v.class=='person'){
         //build this up from Dominant Colors and percentages from overall image and the crop of pose, face...
        // analysisJSON['personsClothed']=0.8;
@@ -581,15 +720,19 @@ predictionsObjects.forEach(function(v) {
         //GOTTA DO THE CROP ROUTINE and EXTRACT BOUNDING BOX
         //bbox: [x, y, width, height]
         personCrop=imageBasics.crop({x:v.bbox[0],y:v.bbox[1],width:v.bbox[2],heigh:v.bbox[3]});
-        personCrop.save('./imagesout/body-' + analysisJSON.originMediaID + "-" + i + '.png');
+        personCrop.save('./imagesout/body-' + analysisJSON.originMediaID + "-" + j + '.png');
 
         
-        var palette = ct.getPalette(personCrop.toBuffer(), 5);   
+        var palette = ct.getPalette(personCrop.toBuffer({"format":"jpeg"}), 5);   
         analysisJSON['personsClothed']=palette;
         //use the NSFW for additional info      
        // analysisJSON['mediaDominantColors']=palette.map(x=>ce.rgb2hex(x));
+
+
+
         
   }
+  j++;
 
   })
 analysisJSON['isAnimal']=isAnimal;
@@ -784,57 +927,13 @@ console.log(objectClasses);
                                         ]
                                       }
 
-
-  
-
-
-  //Onnyx
-  /*
-  const session = new onnx.InferenceSession({backendHint: 'wasm'});
-  const url = "./data/models/resnet/model.onnx";
-  await session.loadModel(url);
-  */
-
-
-  // load the model and metadata
-  // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-  // or files from your local hard drive
-  // Note: the pose library adds "tmImage" object to your window (window.tmImage)
-
-
-  //face emotions - this is an older package that needs some
-          /*
-
-  expressionmodel = await tmImage.load(modelURL,metadataURL);
-  //maxPredictions = expressionmodel.getTotalClasses();
-  const expressionprediction = await expressionmodel.predict(imgToParse, false);
-  console.log('expressionprediction: ');
-  console.log(expressionprediction);
-  analysisJSON['expressionprediction'] = expressionprediction;
-  
-          const detectionsWithExpressions = await faceapi.detectSingleFace(imgToParse).withFaceExpressions();
-          console.log('face expressions: ');
-          console.log(detectionsWithExpressions);
-          analysisJSON['faceExpressions'] = detectionsWithExpressions;
-
-            //face emotions
-          
-            const ageGender = await faceapi.detectSingleFace(imgToParse).withAgeAndGender;
-            console.log('face ageGender: ');
-            console.log(ageGender);
-            analysisJSON['ageGender'] = ageGender;
-        */
-  //spit it all out
-
-  //console.log(analysisJSON);
-
-  //set the analysis complete flag to free up the response.
-
-
-
-
+// NOW PREP THE FINAL RESPONSE
+//SEND 
   response.locals.analysisComplete = true;
   console.log(response.locals.analysisComplete);
+
+  //memory manage a bit
+  imgToParse.dispose();
 
   response.setHeader('Content-Type', 'application/json');
   response.json(analysisJSON);
@@ -852,8 +951,8 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,next
   // multer docs https://github.com/expressjs/multer
   //parse image and classify
 
-//console.log(req.file.buffer);
-//console.log(req.body);
+    //console.log(req.file.buffer);
+    //console.log(req.body);
 
   var parsedMediaOut =  mediaParse(request.file.buffer, request,response);
   console.log(parsedMediaOut);
@@ -906,4 +1005,6 @@ app.post('/analyzeText',function (reqquest, response) {
 
 });
 
+
+//SET THE APP to LISTEN FOR REQUESTS
 app.listen(port, () => console.log(`Maslo Companion Server at http://localhost:${port}`))

@@ -1,0 +1,139 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      4670,        131]
+NotebookOptionsPosition[      3664,        105]
+NotebookOutlinePosition[      4060,        121]
+CellTagsIndexPosition[      4017,        118]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Various utilities/work for parsing things.", "Title",
+ CellChangeTimes->{{3.805404933509746*^9, 
+  3.805404946875493*^9}},ExpressionUUID->"92d1e2da-f860-4f3b-93f8-\
+15ff58e101cb"],
+
+Cell["Getting Images for \[OpenCurlyDoubleQuote]era\[CloseCurlyDoubleQuote] \
+determination", "Subtitle",
+ CellChangeTimes->{{3.8054049549936543`*^9, 
+  3.8054049640199203`*^9}},ExpressionUUID->"0b95d137-d271-4e6b-b087-\
+7d3c0be5504a"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"dateInTheWild", "=", 
+   RowBox[{
+   "Import", "[", 
+    "\"\</home/bigdatakane/Downloads/10.22000-43/data/dataset/meta.csv\>\"", 
+    "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.805404969036552*^9, 3.8054050123332376`*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"dd80fdc2-1b51-4fe3-a7eb-ed8b5ccfd2cf"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"dateInTheWild", "[", 
+  RowBox[{"[", 
+   RowBox[{"1", ";;", "2"}], "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.8054050220837793`*^9, 3.8054050287100887`*^9}},
+ CellLabel->"In[2]:=",ExpressionUUID->"cdae878c-f8c2-44b1-a64b-d0888000ff31"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"\<\"img_id\"\>", ",", "\<\"GT\"\>", ",", "\<\"date_taken\"\>", 
+     ",", "\<\"date_granularity\"\>", ",", "\<\"url\"\>", 
+     ",", "\<\"username\"\>", ",", "\<\"title\"\>", ",", "\<\"license\"\>", 
+     ",", "\<\"license_url\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+    "16058756969", ",", "1957", ",", "\<\"1957-01-01 00:00:00\"\>", ",", "6", 
+     ",", "\<\"https://farm8.staticflickr.com/7563/16058756969_81a301a976.jpg\
+\"\>", ",", "\<\"Gertrud K.\"\>", ",", "1957", 
+     ",", "\<\"All Rights Reserved\"\>", ",", "\<\"\"\>"}], "}"}]}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.805405028919465*^9},
+ CellLabel->"Out[2]=",ExpressionUUID->"5372faaa-a1ac-4622-b787-518aadd4b324"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"dateInTheWild", "[", 
+  RowBox[{"[", 
+   RowBox[{
+    RowBox[{"1", ";;", "3"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"1", ",", "2", ",", "3", ",", "5", ",", "8"}], "}"}]}], "]"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.805405033104322*^9, 3.8054051273732986`*^9}},
+ CellLabel->"In[6]:=",ExpressionUUID->"3fb15e46-271c-4610-abe4-d7d8871128fb"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"\<\"img_id\"\>", ",", "\<\"GT\"\>", ",", "\<\"date_taken\"\>", 
+     ",", "\<\"url\"\>", ",", "\<\"license\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+    "16058756969", ",", "1957", ",", "\<\"1957-01-01 00:00:00\"\>", 
+     ",", "\<\"https://farm8.staticflickr.com/7563/16058756969_81a301a976.jpg\
+\"\>", ",", "\<\"All Rights Reserved\"\>"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+    "8418118218", ",", "1957", ",", "\<\"1957-01-01 00:00:00\"\>", 
+     ",", "\<\"https://farm9.staticflickr.com/8189/8418118218_8cea50d90c.jpg\"\
+\>", ",", "\<\"All Rights Reserved\"\>"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{{3.8054050821151237`*^9, 3.805405128350662*^9}},
+ CellLabel->"Out[6]=",ExpressionUUID->"620ad9bd-5383-4271-b681-31cd059dac58"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{606., 634.875},
+WindowMargins->{{417, Automatic}, {60, Automatic}},
+FrontEndVersion->"12.1 for Linux x86 (64-bit) (June 19, 2020)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"92a569a4-ad01-4ae3-8122-ace2e7019f56"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 185, 3, 160, "Title",ExpressionUUID->"92d1e2da-f860-4f3b-93f8-15ff58e101cb"],
+Cell[768, 27, 235, 4, 53, "Subtitle",ExpressionUUID->"0b95d137-d271-4e6b-b087-7d3c0be5504a"],
+Cell[1006, 33, 341, 8, 92, "Input",ExpressionUUID->"dd80fdc2-1b51-4fe3-a7eb-ed8b5ccfd2cf"],
+Cell[CellGroupData[{
+Cell[1372, 45, 262, 5, 29, "Input",ExpressionUUID->"cdae878c-f8c2-44b1-a64b-d0888000ff31"],
+Cell[1637, 52, 763, 16, 117, "Output",ExpressionUUID->"5372faaa-a1ac-4622-b787-518aadd4b324"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2437, 73, 369, 9, 29, "Input",ExpressionUUID->"3fb15e46-271c-4610-abe4-d7d8871128fb"],
+Cell[2809, 84, 827, 17, 207, "Output",ExpressionUUID->"620ad9bd-5383-4271-b681-31cd059dac58"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
