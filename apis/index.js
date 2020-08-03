@@ -21,6 +21,7 @@ var Jimp = require('jimp');
 const zlib = require('zlib');
 const jpeg = require('jpeg-js');
 const jsfeat = require('jsfeat');
+const sharp = require('sharp');
 
 
 //TENSORFLOW JS makes it easy to do cheap things with small things
@@ -37,6 +38,11 @@ require('@tensorflow/tfjs-backend-webgl');
 const { image } = require('@tensorflow/tfjs-node');
 const automl = require("@tensorflow/tfjs-automl");
 const tfconv = require('@tensorflow/tfjs-converter');
+
+//Text Based models
+const toxicity = require('@tensorflow-models/toxicity');
+const readabilityScores = require('readability-scores');
+const Sentiment = require('sentiment');
 
 //non-Tensorflow ML libraries
 const tmImage = require('@teachablemachine/image');
@@ -64,7 +70,7 @@ const loadModelDeepLab = async () => {
   return await deeplab.load({modelUrl: url,base: modelName, quantizationBytes});
 };
 
-//load Deeplab
+//load Deeplab - may wanna remove this
 loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
 
 const imageSegmentation = async (imageParse) => {
@@ -629,9 +635,13 @@ console.log("jsfeat: " + jsFeatOut);
       analysisJSON['mediaColorComponents']=imageBasics.components;
 
       //image quality assessment.
-      analysisJSON['mediaVisualFocus']=[
-        "blurry"
-      ];
+      //analysisJSON['mediaVisualFocus']=[
+       // "blurry"
+      //];
+
+      //image quality assessment.
+      const { entropy, sharpness } = await sharp(img).stats();
+      analysisJSON['mediaVisualFocus'] = {"blurriness":sharpness,"entropy":entropy};
 
       var compressed = zlib.deflateSync(img).toString('base64');
       var uncompressed = zlib.inflateSync(new Buffer(compressed, 'base64')).toString();
@@ -642,10 +652,19 @@ console.log("jsfeat: " + jsFeatOut);
       analysisJSON['mediaCompressionRatio']=Buffer.byteLength(compressed)/Buffer.byteLength(uncompressed);
 
       //TIME OF DAY - use the image segmentation data. https://github.com/tensorflow/tfjs-models/tree/master/deeplab
-      analysisJSON['timeOfDay']={
-        "tag": "morning",
-        "salience": 0.88
-      };
+     // analysisJSON['timeOfDay']={
+      //  "tag": "morning",
+     //   "salience": 0.88
+     // };
+
+          //load expression model, then use in cropped face.
+      const timeofDayModel = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
+      //face emotion test
+      const timeofDayModelpredictions = await timeofDayModel.classify(imgToParse);
+      console.log('day or night: ');
+      console.log(timeofDayModelpredictions);
+      analysisJSON['timeOfDay']=timeofDayModelpredictions;
+ 
 
       //had to force something in the deeplap tensorflow library... so watch out.
       analysisJSON['imageSegmentation']= await imageSegmentation(imgToParse);
@@ -972,12 +991,116 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,next
 
 });
 
+
+
+
+//PARSE AND ANALYZE THE IMAGE
+var textParse = async function (textInput, request, response) {
+
+  //GET the text
+  sentences = textInput;
+
+  //set the output object up
+  textJSON={};
+
+  //RESPOND BACK WITH ORIGINAL MEDIA ID
+  textJSON['originTextID']=request.body.originTextID;
+  //textJSON['mediaID']=Date.now();
+
+    //set a time out here for the response so we limit bad requests
+    response.locals.analysisComplete = false;
+
+
+    response.setTimeout(7000, function(){
+      // call back function is called when request timed out.
+        //memory manage a bit
+    //imgToParse.dispose();
+      response.locals.analysisComplete=true;
+      response.send(408);
+      });
+
+    //BEGIN ANALYSIS
+
+    //TOXICITY
+    // The minimum prediction confidence.
+        const threshold = 0.9;
+
+        // Load the model. Users optionally pass in a threshold and an array of
+        // labels to include.
+
+        textJSON['nsfwLanguage']=[];
+        toxMod = await toxicity.load(threshold);
+        textJSON['nsfwLanguage']= await toxMod.classify(sentences).then(predictions => {
+          // `predictions` is an array of objects, one for each prediction head,
+          // that contains the raw probabilities for each input along with the
+          // final prediction in `match` (either `true` or `false`).
+          // If neither prediction exceeds the threshold, `match` is `null`.
+
+          //console.log(predictions);
+          return predictions;
+
+          /*
+          prints:
+          {
+            "label": "identity_attack",
+            "results": [{
+              "probabilities": [0.9659664034843445, 0.03403361141681671],
+              "match": false
+            }]
+          },
+          {
+            "label": "insult",
+            "results": [{
+              "probabilities": [0.08124706149101257, 0.9187529683113098],
+              "match": true
+            }]
+          },
+          ...
+          */
+        });
+
+
+        console.log(textJSON['nsfwLanguage'])
+
+        //readability
+        readability = readabilityScores(sentences);
+        textJSON['readability']=readability;
+
+        //sentiment
+        var sentiment = new Sentiment();
+        var sentimentOut = sentiment.analyze(sentences);
+        console.log(sentimentOut);    // Score: -2, Comparative: -0.666
+        textJSON['sentimentScore']=sentimentOut;
+
+// NOW PREP THE FINAL RESPONSE
+//SEND 
+response.locals.analysisComplete = true;
+console.log(response.locals.analysisComplete);
+
+//memory manage a bit
+//textToParse.dispose();
+
+response.setHeader('Content-Type', 'application/json');
+response.json(textJSON);
+
+return true;
+
+}
+
 //analyzeText Post
-app.post('/analyzeText',function (reqquest, response) {
+app.post('/analyzeText',upload.single('media'),function (request, response) {
   var dNow=Date.now();
   var yMod=13;
   var d = new Date();
   var n = d.getHours();
+
+
+  var textParsed =  textParse(request.body.media, request,response);
+  console.log(request.body);
+
+
+
+
     var outJSON =
     {
       "originTextID": "123213432",
@@ -998,8 +1121,8 @@ app.post('/analyzeText',function (reqquest, response) {
         "etc"
       ]
     }
-    response.setHeader('Content-Type', 'application/json');
-  response.json(outJSON);
+    //response.setHeader('Content-Type', 'application/json');
+ // response.json(outJSON);
 
 
 

@@ -15,18 +15,14 @@ head to the docs folder or https://heymaslo.github.io/companionserver/#/ for ful
 ### What Are The Algos?
 Machine Learning models :)... documentation on each one here:  
 
-
-
-Default
-
 Mostly Tensflow
 * get anything you want here: https://tfhub.dev/
-
 * Image Scene: https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
-Object Detection: https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
+* Object Detection: https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
 * Body Landmarks: https://github.com/tensorflow/tfjs-models/tree/master/body-pix
 * Body Post: https://github.com/tensorflow/tfjs-models/tree/master/posenet
 * Text Toxicity: https://github.com/tensorflow/tfjs-models/tree/master/toxicity
+* Readability Scores: https://www.npmjs.com/package/readability-scores
 * Face Detection: https://github.com/tensorflow/tfjs-models/tree/master/blazeface
 * Image Segmentation: https://github.com/tensorflow/tfjs-models/tree/master/deeplab
 * Faceland Mark Detection: https://github.com/tensorflow/tfjs-models/tree/master/facemesh
@@ -62,6 +58,10 @@ http://www.eurecom.fr/en/publication/5973/download/sec-publi-5973.pdf
 Era of Photo
 https://link.springer.com/chapter/10.1007/978-3-319-56608-5_57
 https://www.radar-service.eu/radar/en/dataset/tJzxrsYUkvPklBOw#
+http://people.ee.ethz.ch/~ihnatova/
+
+lots more training datasets
+http://homepages.inf.ed.ac.uk/rbf/CVonline/Imagedbase.htm
 
 full licensed dataset
 https://www.radar-service.eu/radar-backend/archives/toiMGdrQfZcWpnjy/versions/1/content
@@ -71,7 +71,8 @@ https://www.radar-service.eu/radar-backend/archives/toiMGdrQfZcWpnjy/versions/1/
 In: Advances in Information Retrieval: Proceedings of 39th European Conference on Information Retrieval (ECIR), 
 Aberdeen (UK), Lecture Notes on Computer Science (LNCS), Vol. 10193, Springer, pp. 619-625, 2017.
 
-
+Gender Coded Word Lists
+https://github.com/pcbouman-eur/gender-decoder-js
 
 note:  To speed things up dramatically, install our node backend, which binds to TensorFlow C++, by running npm i @tensorflow/tfjs-node, or npm i @tensorflow/tfjs-node-gpu if you have CUDA. Then call require('@tensorflow/tfjs-node'); (-gpu suffix for CUDA) at the start of your program. Visit https://github.com/tensorflow/tfjs-node for more details.
 
@@ -89,12 +90,25 @@ https://github.com/ivclab/Day_Night_dataset_list
 image lines:
 https://towardsdatascience.com/lines-detection-with-hough-transform-84020b3b1549
 
+Intents
+https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
+
+Tinder Data:
+https://techcrunch.com/2017/04/28/someone-scraped-40000-tinder-selfies-to-make-a-facial-dataset-for-ai-experiments/
+
+Get More Data:
+https://storage.googleapis.com/openimages/web/visualizer/index.html?set=train&type=detection&c=%2Fm%2F01d380
+
+
 #### libraries/thinks worth worth knowing about
 
 https://meowni.ca/posts/on-tfjs-datasync/
 
 might use this:
 https://github.com/inspirit/jsfeat
+
+mildly interesting data
+https://towardsdatascience.com/my-friends-gave-me-their-tinder-data-7fcd2621c140
 
 
 ### Containers and Installations

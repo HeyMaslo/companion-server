@@ -1,0 +1,20 @@
+var outJSON =
+{
+  "originTextID": "123213432",
+  "writingLevel": "78",
+  "ageLevel": "18",
+  "educationGradeLevel": "11",
+  "vocabularyComplexity": "0.6",
+  "sentimentScore": "-0.25",
+  "emotionalChargedLanguage": "1",
+  "genderCodedLanguage": [
+    "somewhat female"
+  ],
+ DONE TOXITY FILTER "nsfwLanguage": "1",
+  "emotionalTone": [
+    "sad",
+    "happy",
+    "upbeat",
+    "etc"
+  ]
+}
