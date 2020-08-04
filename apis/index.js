@@ -62,7 +62,7 @@ const nsfw = require('nsfwjs');
 //we need to get all the models loaded up on BOOT, not run time.  the models dont change request to request.  (though there is a case to be made to not boot a giant set of things into memory)
 const deeplab = require('@tensorflow-models/deeplab');
 
-// this is how we can swap out for LOCAL models, not internet ones.  so download them and bring them in locally
+// IMAGE SEGMENTATION this is how we can swap out for LOCAL models, not internet ones.  so download them and bring them in locally
 const loadModelDeepLab = async () => {
   const modelName = 'pascal';   // set to your preferred model, either `pascal`, `cityscapes` or `ade20k`
   const quantizationBytes = 2;  // either 1, 2 or 4
@@ -71,7 +71,7 @@ const loadModelDeepLab = async () => {
 };
 
 //load Deeplab - may wanna remove this
-loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
+//loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
 
 const imageSegmentation = async (imageParse) => {
         console.log(imageParse);
@@ -440,21 +440,618 @@ res.json(outJSON);
 }
 );
 
-//PARSE AND ANALYZE THE IMAGE
-var mediaParse = async function (img, request, response) {
+//Each Parser gets it's own function
+//TEMPLATE FOR PARSING FUNCTIONS
+var generalParsingFunction = async function(img, parseCallback) {
+  console.log(typeof(img));
+  analysisJSON={};
+  if (typeof(img)=="object") {
+
+        parseCallback(null, analysisJSON);
+        
+  }
+  else {
+    analysisJSON['error']="no image information parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+//General Error Handler and Response parser
+var parseCallback = async function (error, retval) {
+  if (error) {
+    console.log(error);
+    return retval;
+  }
+  console.log(retval);
+  return retval;
+}
+
+//Basic Image Data
+var imageMetadata = async function(img, parseCallback) {
+  console.log(typeof(img));
+  analysisJSON={};
+  if (typeof(img)=="object") {
+
+          //first the basics of image processing
+      //https://image-js.github.io/image-js/#imagecomponents
+
+    let imageBasics = await Image.load(img);
+
+    /* This is too slow
+  //TESTING JS FEAT
+  
+  //context2d.drawImage(video, 0, 0, width, height);
+  //var image_data = context2d.getImageData(0, 0, width, height);
+  var image_data = imageBasics;
+  var gray_img = new jsfeat.matrix_t(imageBasics.width, imageBasics.height, jsfeat.U8_t | jsfeat.C1_t);
+  var code = jsfeat.COLOR_RGBA2GRAY;
+  var jsFeatOut={}
+  jsFeatOut=await jsfeat.imgproc.grayscale(image_data, imageBasics.width, imageBasics.height, gray_img, code);
+  analysisJSON['imageLines']=jsFeatOut;
+  var matrix = new jsfeat.matrix_t(2,2, jsfeat.U8_t | jsfeat.C1_t);
+  matrix.data[1] = 4; 
+  console.log(matrix.data[1]);
+  
+  console.log("jsfeat: " + jsFeatOut);
+  */
+  
+  
+    //console.log(imageBasics.getHistograms());
+  
+        var ct = new ColorThief();
+        var palette = ct.getPalette(img, 5);
+        
+        analysisJSON['mediaDominantColors']=palette.map(x=>ce.rgb2hex(x));
+  
+      //map over all the colors to convert
+      //ce.rgb2hex(colours[0][0][1])
+  
+        
+        analysisJSON['mediaImageResolution']={
+          "height": imageBasics.width,
+          "width": imageBasics.height
+        };
+        analysisJSON['mediaColorComponents']=imageBasics.components;
+  
+        //image quality assessment.
+        //analysisJSON['mediaVisualFocus']=[
+         // "blurry"
+        //];
+  
+        //image quality assessment.
+        const { entropy, sharpness } = await sharp(img).stats();
+        analysisJSON['mediaVisualFocus'] = {"blurriness":sharpness,"entropy":entropy};
+  
+        var compressed = zlib.deflateSync(img).toString('base64');
+        var uncompressed = zlib.inflateSync(new Buffer(compressed, 'base64')).toString();
+        analysisJSON['mediaFileSize']=imageBasics.size;//may want to use: uncompressed
+        //console.log(Buffer.byteLength(compressed));
+       // console.log(Buffer.byteLength(uncompressed));
+        analysisJSON['mediaCompressionSize']=Buffer.byteLength(compressed);
+        analysisJSON['mediaCompressionRatio']=Buffer.byteLength(compressed)/Buffer.byteLength(uncompressed);
+
+        parseCallback(null, analysisJSON);
+  }
+  else {
+    analysisJSON['error']="no image information parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+//IMAGE SCENE
+var imageScene = async function(img, parseCallback) {
+  //Expects TENSOR version of image...
+  console.log(typeof(img));
+  analysisJSON={};
+  if (typeof(img)=="object") {
+         //TIME OF DAY - use the image segmentation data. https://github.com/tensorflow/tfjs-models/tree/master/deeplab
+     // analysisJSON['timeOfDay']={
+      //  "tag": "morning",
+     //   "salience": 0.88
+     // };
+
+          //load expression model, then use in cropped face.
+          const timeofDayModel = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
+          const timeofDayModelpredictions = await timeofDayModel.classify(img);
+          //console.log('day or night: ');
+         // console.log(timeofDayModelpredictions);
+          analysisJSON['timeOfDay']=timeofDayModelpredictions;
+
+          //estimated year of photo
+          analysisJSON['mediaEstimatedCreationDate']= 2018;
+     
+          //IMAGE SEGMENTATION is useful for Composition Assessments.
+          //had to force something in the deeplap tensorflow library... so watch out.
+          analysisJSON['composition']= await imageSegmentation(img);
+    
+
+
+          // Image/Scene Classifications
+          // Load the model.
+
+          //const mn = mobilenet;
+          //mn.modelURL = `file://./models/mobilenet/model.json`
+          //const model= await mn.load({"modelUrl":"http://localhost:8080/mobilenet/model.json"})
+          //const model = await mobilenet.load('file://./models/mobilenet/model.json');
+
+          //const model = await tf.loadGraphModel('file://./models/mobilenet/model.json',{size:224})
+
+          //had to get these to be local mobilenet pick ups...  
+
+          const model = await mobilenet.load();
+          
+          // Classify the image.
+          const predictions = await model.classify(img);
+          
+         // console.log('Image Scene Predictions: ');
+         // console.log(predictions);
+          analysisJSON['scenes'] = predictions;
+
+        parseCallback(null, analysisJSON);
+  }
+  else {
+    analysisJSON['error']="no image scene parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+//OBJECT DETECTION
+var imageObjectDetection = async function(img, parseCallback) {
+  console.log(typeof(img));
+  analysisJSON={};
+  if (typeof(img)=="object") {
+
+    const imgToParse = tf.node.decodeImage(img,3);
+    // const imgToParse4D = tf.node.decodeImage(img,3);
+
+    //CONVERT IMAGE to image object for image-js... useful for many things
+    let imageBasics = await Image.load(img);
+      //Object Detection
+
+    // Load the model.
+    const modelObjects = await cocoSsd.load();
+
+    // Classify the image.
+    const predictionsObjects = await modelObjects.detect(imgToParse);
+  
+    //console.log('Image Object Predictions: ');
+    //console.log(predictionsObjects);
+    analysisJSON['objects'] = predictionsObjects;
+
+    //GET PERSON AND IS ANIMAL COUNTS
+
+
+
+var objectClasses={};
+var isAnimal={}
+var ct = new ColorThief();
+predictionsObjects.forEach(function(v) {
+  objectClasses[v.class] = (objectClasses[v.class] || 0) + 1;
+
+
+  //we may want to put some thresholding in here.  like above 90%...
+  if(v.class =='cat' || v.class =='dog' || v.class =='horse'){
+    isAnimal=v;
+  }
+  j=0;
+  if(v.class=='person'){
+        //build this up from Dominant Colors and percentages from overall image and the crop of pose, face...
+       // analysisJSON['personsClothed']=0.8;
+
+        //GOTTA DO THE CROP ROUTINE and EXTRACT BOUNDING BOX
+        //bbox: [x, y, width, height]
+        //quick check that nothing will go out of bounds
+        if(v.bbox[2]+v.bbox[0]>=imageBasics.width){
+          v.bbox[2]=imageBasics.width-v.bbox[0];
+
+        }
+        if(v.bbox[1]+v.bbox[3]>=imageBasics.width){
+          v.bbox[3]=imageBasics.height-v.bbox[1];
+
+        }
+        personCrop=imageBasics.crop({x:v.bbox[0],y:v.bbox[1],width:v.bbox[2],height:v.bbox[3]});
+        personCrop.save('./imagesout/body-' + Date.now() + "-" + j + '.png');
+
+        
+        var palette = ct.getPalette(personCrop.toBuffer({"format":"jpeg"}), 5);   
+        analysisJSON['personsColorPalette']=palette;
+        //use the NSFW for additional info      
+       // analysisJSON['mediaDominantColors']=palette.map(x=>ce.rgb2hex(x));
+
+
+
+        
+  }
+  j++;
+
+  })
+analysisJSON['isAnimal']=isAnimal;
+analysisJSON['objectCountsbyClass']=objectClasses;
+console.log(objectClasses);
+
+        parseCallback(null, analysisJSON);
+        
+  }
+  else {
+    analysisJSON['error']="no image objects parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+//NSFW
+var imageNSFW = async function(imgToParse, parseCallback) {
+  console.log(typeof(imgToParse));
+  analysisJSON={};
+  if (typeof(imgToParse)=="object") {
+    
+      const nsfwModel = await nsfw.load('file://./models/nsfw/',{size: 299}) // To load a local model, nsfw.load('file://./path/to/model/');
+   
+    // Image must be in tf.tensor3d format
+    // you can convert image to tf.tensor3d with tf.node.decodeImage(Uint8Array,channels)
+    
+    //const imageNSFW =  tf.node.decodeImage(personCrop.toBuffer({"format":"jpeg"}),3);
+    //const imageNSFW = convert(img);
+    const nsfwPredictions = await nsfwModel.classify(imgToParse);
+    analysisJSON['nsfw']=nsfwPredictions;
+    //imageNSFW.dispose() // Tensor memory must be managed explicitly (it is not sufficient to let a tf.Tensor go out of scope for its memory to be released).
+    console.log(nsfwPredictions)
+
+        parseCallback(null, analysisJSON);
+        
+  }
+  else {
+    analysisJSON['error']="no NSFW content parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+//POSES
+var imagePosing = async function(imgToParse, parseCallback) {
+  console.log(typeof(imgToParse));
+  analysisJSON={};
+  if (typeof(imgToParse)=="object") {
+          //POSES are useful for figuring out the COMPOSITION of the image AND whether someone is laying down.
+          //posenet
+          const net = await posenet.load();
+
+          const predictionPose = await net.estimateSinglePose(imgToParse, {
+            flipHorizontal: false
+          });
+         // console.log('PosePredictions: ');
+          //console.log(predictionPose);
+
+          //compare nose vs foot for laying down etc.
+            /*
+          "pose": {
+            "score": 0.7083604826646692,
+            "keypoints": [
+                {
+                    "score": 0.9947373867034912,
+                    "part": "nose",
+                    "position": {
+                        "x": 1202.435438104177,
+                        "y": 143.82494369091228
+                    }
+
+                    leftAnkle
+                  */
+
+          //var index = predictionPose.keypoints.findIndex(obj => obj.part=="nose");
+          var poseLabel="unknown";
+          //console.log(index);
+
+          //add checks for different body positions
+          if((predictionPose.keypoints[predictionPose.keypoints.findIndex(obj => obj.part=="nose")].position.y>predictionPose.keypoints[predictionPose.keypoints.findIndex(obj => obj.part=="leftAnkle")].position.y)||(predictionPose.keypoints[predictionPose.keypoints.findIndex(obj => obj.part=="nose")].position.y>predictionPose.keypoints[predictionPose.keypoints.findIndex(obj => obj.part=="rightAnkle")].position.y)){
+            poseLabel="layingdown"
+          };
+
+
+
+          console.log(poseLabel);
+          analysisJSON['pose']=poseLabel;
+          analysisJSON['poseLandmarks'] = predictionPose;
+
+        parseCallback(null, analysisJSON);
+        
+  }
+  else {
+    analysisJSON['error']="no NSFW content parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+//FACIAL DETECTION and EXPRESSIONS
+var imageFaceDetection = async function(img, parseCallback) {
+  console.log(typeof(img));
+  analysisJSON={};
+  if (typeof(img)=="object") {
+
+    const imgToParse = tf.node.decodeImage(img,3);
+    // const imgToParse4D = tf.node.decodeImage(img,3);
+
+    //CONVERT IMAGE to image object for image-js... useful for many things
+    let imageBasics = await Image.load(img);
+ 
+      //old facemood     
+        //const URL = path.join(__dirname, '/models/tm-faceemotion/');
+        const URL= "http://localhost:8080/tm-faceemotion/"
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+        const weightsURL = URL + "weights.bin";
+
+        //teachable Machines based Emotion Model
+      // const emotionmodel = await tf.loadLayersModel(modelURL);
+      // const emotionalTMpredictions = await emotionmodel.predict(imgToParse);
+
+
+      //emotionmodel = await tmImage.load(modelURL, metadataURL);
+      //const emotionalTMpredictions =await emotionmodel.predict(img);
+      //console.log("emotional from test faces:" + emotionalTMpredictions);
+
+        //blazeface
+          // Load the model.
+          const bfmodel = await blazeface.load();
+
+          // Pass in an image or video to the model. The model returns an array of
+          // bounding boxes, probabilities, and landmarks, one for each detected face.
+        
+          const returnTensors = false; // Pass in `true` to get tensors back, rather than values.
+          const blazeFacePredictions = await bfmodel.estimateFaces(imgToParse, returnTensors);
+
+          //console.log('blazeFace: ');
+         // console.log(blazeFacePredictions);
+
+          //deal with summary metrics
+          
+          analysisJSON['allFaces'] = blazeFacePredictions;
+
+            //count faces up
+          analysisJSON['faceCount']=blazeFacePredictions.length;
+
+          //count persons... gotta refactor this to find bodies that may not have faces recognized... use the object recognizer or poses
+          analysisJSON['personsCount']=blazeFacePredictions.length;
+
+          //get general emotions
+          // gotta change what we're doing here.
+          //duplicative
+         /* analysisJSON['emotionTags']=[
+            {
+              "tag": "smiling",
+              "salience": 0.92
+            },
+            {
+              "tag": "frowning",
+              "salience": 0.78
+            },
+            {
+              "tag": "anger",
+              "salience": 0.51
+            },
+            {
+              "tag": "surprise",
+              "salience": 0.24
+            }
+          ];
+          */
+        //TODO is detect the faces individually in an image and evaluate each face.
+        //AutoML Model for Facial Expression Classification
+
+          //load expression model, then use in cropped face.
+        const faceExpressionModel = await automl.loadImageClassification('http://localhost:8080/ferFace/model.json');
+        //get the gender model too
+        const genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
+
+        var primarySubjectFaceVisible={visibility: 0};
+        if (blazeFacePredictions[0]){
+          analysisJSON['primarySubjectFaceVisible']=blazeFacePredictions[0];
+        
+
+        }
+        else{
+          analysisJSON['primarySubjectFaceVisible']=primarySubjectFaceVisible;
+        }
+
+        var secondarySubjectFaceVisible={visibility: 0};
+        if (blazeFacePredictions[1]){
+          var secondarySubjectFaceVisible=blazeFacePredictions[1];
+        }
+        else {
+          analysisJSON['secondarySubjectFaceVisible']=secondarySubjectFaceVisible;
+        }
+
+
+
+        if (blazeFacePredictions.length > 0) {
+          /*
+          `predictions` is an array of objects describing each detected face, for example:
+
+          [
+            {
+              topLeft: [232.28, 145.26],
+              bottomRight: [449.75, 308.36],
+              probability: [0.998],
+              landmarks: [
+                [295.13, 177.64], // right eye
+                [382.32, 175.56], // left eye
+                [341.18, 205.03], // nose
+                [345.12, 250.61], // mouth
+                [252.76, 211.37], // right ear
+                [431.20, 204.93] // left ear
+              ]
+            }
+          ]
+          */
+        
+          //NOTE that BlazeFace orders by highest probability face.  we may want a different logic for primary face.
+          analysisJSON['facialExpressions']=[];
+          for (let i = 0; i < blazeFacePredictions.length; i++) {
+            const start = blazeFacePredictions[i].topLeft;
+            const end = blazeFacePredictions[i].bottomRight;
+            const size = [end[0] - start[0], end[1] - start[1]];
+
+            // Render a rectangle over each detected face.
+            //ctx.fillRect(start[0], start[1], size[0], size[1]);
+              //useful for cropping for the detected faces
+              //clean up crop size issues.
+              if(imageBasics.width-end[0]<0)
+                {
+                    end[0]=imageBasics.width
+                }
+                if(imageBasics.height-end[01]<0)
+                {
+                    end[1]=imageBasics.height
+                }
+              //console.log();
+            //console.log(imageBasics.height-end[1]);
+            var faceCrop = imageBasics.crop({
+              x:start[0],
+              y:start[1],
+              width:end[0] - start[0],
+              height:end[1] - start[1]
+            });
+
+            faceCrop.save('./imagesout/' + Date.now()+ "-" + i + '.png');
+
+            //face emotion test
+            const faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop);
+            //console.log('faceExpressionModel: ');
+            //console.log(faceExpressionModelpredictions);
+            analysisJSON['facialExpressions'].push(faceExpressionModelpredictions);
+
+
+            if (i==0){
+                  tensor = tf.cast(tf.node.decodeImage(faceCrop.resize({width:96,height:96}).toBuffer(),3), 'float32');
+                  tensor = tensor.div(255.0);
+                  tensor = tensor.expandDims(0);
+                  genderresult = genderModel.predict(tensor);
+
+                  //convert the thresholds to a label.
+                  const confidences = Array.from(genderresult.dataSync());
+                  const genderTypes = ['male', 'female'];
+                  analysisJSON['primarySubjectGender'] = {
+                    "tag": genderTypes[confidences.indexOf(Math.max(...confidences))],
+                    "salience": genderresult.arraySync()
+                  };
+              }
+            //console.log(genderModel.predict(faceCrop));
+
+          
+
+          }
+        }
+
+
+        //FACE MESH FOR FINER GRAIN
+        
+          // Load the MediaPipe facemesh model.
+          const facemeshmodel = await facemesh.load({maxFaces:3});
+        
+          // Pass in a video stream (or an image, canvas, or 3D tensor) to obtain an
+          // array of detected faces from the MediaPipe graph.
+          const predictions = await facemeshmodel.estimateFaces(imgToParse);
+        
+          if (predictions.length > 0) {
+            /*
+            `predictions` is an array of objects describing each detected face, for example:
+        
+            [
+              {
+                faceInViewConfidence: 1, // The probability of a face being present.
+                boundingBox: { // The bounding box surrounding the face.
+                  topLeft: [232.28, 145.26],
+                  bottomRight: [449.75, 308.36],
+                },
+                mesh: [ // The 3D coordinates of each facial landmark.
+                  [92.07, 119.49, -17.54],
+                  [91.97, 102.52, -30.54],
+                  ...
+                ],
+                scaledMesh: [ // The 3D coordinates of each facial landmark, normalized.
+                  [322.32, 297.58, -17.54],
+                  [322.18, 263.95, -30.54]
+                ],
+                annotations: { // Semantic groupings of the `scaledMesh` coordinates.
+                  silhouette: [
+                    [326.19, 124.72, -3.82],
+                    [351.06, 126.30, -3.00],
+                    ...
+                  ],
+                  ...
+                }
+              }
+            ]
+            */
+
+
+            analysisJSON["faceMesh"]={};
+            for (let i = 0; i < predictions.length; i++) {
+              //const keypoints = predictions[i].faceInViewConfidence;
+              analysisJSON['faceMesh']={"faceinview":predictions[i].faceInViewConfidence,"boundingbox":predictions[i].boundingBox};
+              // Log facial keypoints.
+             // for (let i = 0; i < keypoints.length; i++) {
+             //   const [x, y, z] = keypoints[i];
+        //
+               // console.log(`Keypoint ${i}: [${x}, ${y}, ${z}]`);
+             // }
+            }
+          }
+
+
+        parseCallback(null, analysisJSON);
+        
+  }
+  else {
+    analysisJSON['error']="no image faces parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+
+//IMAGE SCENE
+var imageManipulation = async function(img, parseCallback) {
+  //Expects TENSOR version of image...
+  console.log(typeof(img));
+  analysisJSON={};
+  if (typeof(img)=="object") {
+
+
+          //load expression model, then use in cropped face.
+          const photoManipulation = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
+          const photoManipulationpredictions = await photoManipulation.classify(img);
+          //console.log('day or night: ');
+         // console.log(timeofDayModelpredictions);
+          analysisJSON['manipulations']=photoManipulationpredictions;
+
+        parseCallback(null, analysisJSON);
+  }
+  else {
+    analysisJSON['error']="no image scene parsed.";
+    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+  }
+  return analysisJSON;
+}
+
+
+//This function parses ALL OF IT
+var mediaParse = async function(img, request, response) {
   
   //set a time out here for the response so we limit bad requests
   response.locals.analysisComplete = false;
 
-  response.setTimeout(7000, function(){
+  response.setTimeout(10000, function(){
     // call back function is called when request timed out.
       //memory manage a bit
-  imgToParse.dispose();
-    response.locals.analysisComplete=true;
-    response.send(408);
-    });
-
-
+      imgToParse.dispose();
+      response.locals.analysisComplete=true;
+      response.send(408);
+      });
 
 //SET UP OUTPUT  
 var analysisJSONReference =
@@ -578,7 +1175,7 @@ var analysisJSONReference =
 
 var analysisJSON= {};
 
-console.log(request.body);
+//console.log(request.body);
 
 
 
@@ -589,375 +1186,74 @@ analysisJSON['mediaID']=Date.now();
 
 // CONVERT IMAGE BUFFER FOR TENSORFLOW
 
-  const imgToParse = tf.node.decodeImage(img,3);
- // const imgToParse4D = tf.node.decodeImage(img,3);
-
-//GET BASIC INFO ABOUT THE IMAGE
-  //first the basics of image processing
-  //https://image-js.github.io/image-js/#imagecomponents
-
-  let imageBasics = await Image.load(img);
-
-  /* This is too slow
-//TESTING JS FEAT
-
-//context2d.drawImage(video, 0, 0, width, height);
-//var image_data = context2d.getImageData(0, 0, width, height);
-var image_data = imageBasics;
-var gray_img = new jsfeat.matrix_t(imageBasics.width, imageBasics.height, jsfeat.U8_t | jsfeat.C1_t);
-var code = jsfeat.COLOR_RGBA2GRAY;
-var jsFeatOut={}
-jsFeatOut=await jsfeat.imgproc.grayscale(image_data, imageBasics.width, imageBasics.height, gray_img, code);
-analysisJSON['imageLines']=jsFeatOut;
-var matrix = new jsfeat.matrix_t(2,2, jsfeat.U8_t | jsfeat.C1_t);
-matrix.data[1] = 4; 
-console.log(matrix.data[1]);
-
-console.log("jsfeat: " + jsFeatOut);
-*/
-
-
-  //console.log(imageBasics.getHistograms());
-
-      var ct = new ColorThief();
-      var palette = ct.getPalette(img, 5);
-      
-      analysisJSON['mediaDominantColors']=palette.map(x=>ce.rgb2hex(x));
-
-    //map over all the colors to convert
-    //ce.rgb2hex(colours[0][0][1])
-
-      
-      analysisJSON['mediaImageResolution']={
-        "height": imageBasics.width,
-        "width": imageBasics.height
-      };
-      analysisJSON['mediaColorComponents']=imageBasics.components;
-
-      //image quality assessment.
-      //analysisJSON['mediaVisualFocus']=[
-       // "blurry"
-      //];
-
-      //image quality assessment.
-      const { entropy, sharpness } = await sharp(img).stats();
-      analysisJSON['mediaVisualFocus'] = {"blurriness":sharpness,"entropy":entropy};
-
-      var compressed = zlib.deflateSync(img).toString('base64');
-      var uncompressed = zlib.inflateSync(new Buffer(compressed, 'base64')).toString();
-      analysisJSON['mediaFileSize']=imageBasics.size;//may want to use: uncompressed
-      console.log(Buffer.byteLength(compressed));
-      console.log(Buffer.byteLength(uncompressed));
-      analysisJSON['mediaCompressionSize']=Buffer.byteLength(compressed);
-      analysisJSON['mediaCompressionRatio']=Buffer.byteLength(compressed)/Buffer.byteLength(uncompressed);
-
-      //TIME OF DAY - use the image segmentation data. https://github.com/tensorflow/tfjs-models/tree/master/deeplab
-     // analysisJSON['timeOfDay']={
-      //  "tag": "morning",
-     //   "salience": 0.88
-     // };
-
-          //load expression model, then use in cropped face.
-      const timeofDayModel = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
-      //face emotion test
-      const timeofDayModelpredictions = await timeofDayModel.classify(imgToParse);
-      console.log('day or night: ');
-      console.log(timeofDayModelpredictions);
-      analysisJSON['timeOfDay']=timeofDayModelpredictions;
- 
-
-      //had to force something in the deeplap tensorflow library... so watch out.
-      analysisJSON['imageSegmentation']= await imageSegmentation(imgToParse);
-
-      //estimated year of photo
-      analysisJSON['mediaEstimatedCreationDate']= 2018;
-
-  //then do machine learning stuff
-
-  // Image/Scene Classifications
-  // Load the model.
-
-  //const mn = mobilenet;
-  //mn.modelURL = `file://./models/mobilenet/model.json`
-  //const model= await mn.load({"modelUrl":"http://localhost:8080/mobilenet/model.json"})
-  //const model = await mobilenet.load('file://./models/mobilenet/model.json');
-
-  //const model = await tf.loadGraphModel('file://./models/mobilenet/model.json',{size:224})
-
-  //had to get these to be local mobilenet pick ups...  
-
-  const model = await mobilenet.load();
-  
-  // Classify the image.
-  const predictions = await model.classify(imgToParse);
-  
-  console.log('Image Scene Predictions: ');
-  console.log(predictions);
-  analysisJSON['scenes'] = predictions;
-
-
-  //Object Detection
-
-    // Load the model.
-    const modelObjects = await cocoSsd.load();
-
-    // Classify the image.
-    const predictionsObjects = await modelObjects.detect(imgToParse);
-  
-    console.log('Image Object Predictions: ');
-    console.log(predictionsObjects);
-    analysisJSON['objects'] = predictionsObjects;
-
-//GET PERSON AND IS ANIMAL COUNTS
-
-const nsfwModel = await nsfw.load('file://./models/nsfw/',{size: 299}) // To load a local model, nsfw.load('file://./path/to/model/')
-// Image must be in tf.tensor3d format
-// you can convert image to tf.tensor3d with tf.node.decodeImage(Uint8Array,channels)
-
-//const imageNSFW =  tf.node.decodeImage(personCrop.toBuffer({"format":"jpeg"}),3);
-//const imageNSFW = convert(img);
-const nsfwPredictions =  nsfwModel.classify(imgToParse)
-analysisJSON['nsfw']=nsfwPredictions;
-//imageNSFW.dispose() // Tensor memory must be managed explicitly (it is not sufficient to let a tf.Tensor go out of scope for its memory to be released).
-console.log(nsfwPredictions)
-
-var objectClasses={};
-var isAnimal={}
-predictionsObjects.forEach(function(v) {
-  objectClasses[v.class] = (objectClasses[v.class] || 0) + 1;
-
-
-  //we may want to put some thresholding in here.  like above 90%...
-  if(v.class =='cat' || v.class =='dog' || v.class =='horse'){
-    isAnimal=v;
-  }
-  j=0;
-  if(v.class=='person'){
-        //build this up from Dominant Colors and percentages from overall image and the crop of pose, face...
-       // analysisJSON['personsClothed']=0.8;
-
-        //GOTTA DO THE CROP ROUTINE and EXTRACT BOUNDING BOX
-        //bbox: [x, y, width, height]
-        personCrop=imageBasics.crop({x:v.bbox[0],y:v.bbox[1],width:v.bbox[2],heigh:v.bbox[3]});
-        personCrop.save('./imagesout/body-' + analysisJSON.originMediaID + "-" + j + '.png');
-
-        
-        var palette = ct.getPalette(personCrop.toBuffer({"format":"jpeg"}), 5);   
-        analysisJSON['personsClothed']=palette;
-        //use the NSFW for additional info      
-       // analysisJSON['mediaDominantColors']=palette.map(x=>ce.rgb2hex(x));
-
-
-
-        
-  }
-  j++;
-
-  })
-analysisJSON['isAnimal']=isAnimal;
-analysisJSON['objectCountsbyClass']=objectClasses;
-console.log(objectClasses);
-
-
-  //POSES are useful for figuring out the COMPOSITION of the image AND whether someone is laying down.
-  //posenet
-  const net = await posenet.load();
-
-  const predictionPose = await net.estimateSinglePose(imgToParse, {
-    flipHorizontal: false
-  });
-  console.log('PosePredictions: ');
-  console.log(predictionPose);
-  analysisJSON['pose'] = predictionPose;
-
-  //old facemood     
-  //const URL = path.join(__dirname, '/models/tm-faceemotion/');
-  const URL= "http://localhost:8080/tm-faceemotion/"
-  const modelURL = URL + "model.json";
-  const metadataURL = URL + "metadata.json";
-  const weightsURL = URL + "weights.bin";
-
-  //teachable Machines based Emotion Model
- // const emotionmodel = await tf.loadLayersModel(modelURL);
- // const emotionalTMpredictions = await emotionmodel.predict(imgToParse);
-
-
-//emotionmodel = await tmImage.load(modelURL, metadataURL);
-//const emotionalTMpredictions =await emotionmodel.predict(img);
-//console.log("emotional from test faces:" + emotionalTMpredictions);
-
-  //blazeface
-    // Load the model.
-    const bfmodel = await blazeface.load();
-
-    // Pass in an image or video to the model. The model returns an array of
-    // bounding boxes, probabilities, and landmarks, one for each detected face.
-  
-    const returnTensors = false; // Pass in `true` to get tensors back, rather than values.
-    const blazeFacePredictions = await bfmodel.estimateFaces(imgToParse, returnTensors);
-
-    console.log('blazeFace: ');
-    console.log(blazeFacePredictions);
-
-    //deal with summary metrics
-    
-    analysisJSON['allFaces'] = blazeFacePredictions;
-
-      //count faces up
-    analysisJSON['faceCount']=blazeFacePredictions.length;
-
-    //count persons... gotta refactor this to find bodies that may not have faces recognized... use the object recognizer or poses
-    analysisJSON['personsCount']=blazeFacePredictions.length;
-
-    //get general emotions
-    analysisJSON['emotionTags']=[
-      {
-        "tag": "smiling",
-        "salience": 0.92
-      },
-      {
-        "tag": "frowning",
-        "salience": 0.78
-      },
-      {
-        "tag": "anger",
-        "salience": 0.51
-      },
-      {
-        "tag": "surprise",
-        "salience": 0.24
-      }
-    ];
-  //TODO is detect the faces individually in an image and evaluate each face.
-  //AutoML Model for Facial Expression Classification
-
-    //load expression model, then use in cropped face.
-  const faceExpressionModel = await automl.loadImageClassification('http://localhost:8080/ferFace/model.json');
-  //get the gender model too
-  const genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
-
-  var primarySubjectFaceVisible={visibility: 0};
-  if (blazeFacePredictions[0]){
-    analysisJSON['primarySubjectFaceVisible']=blazeFacePredictions[0];
-   
-
-  }
-  else{
-    analysisJSON['primarySubjectFaceVisible']=primarySubjectFaceVisible;
-  }
-
-  var secondarySubjectFaceVisible={visibility: 0};
-  if (blazeFacePredictions[1]){
-    var secondarySubjectFaceVisible=blazeFacePredictions[1];
-  }
-  else {
-    analysisJSON['secondarySubjectFaceVisible']=secondarySubjectFaceVisible;
-  }
-
-
-
-  if (blazeFacePredictions.length > 0) {
-    /*
-    `predictions` is an array of objects describing each detected face, for example:
-
-    [
-      {
-        topLeft: [232.28, 145.26],
-        bottomRight: [449.75, 308.36],
-        probability: [0.998],
-        landmarks: [
-          [295.13, 177.64], // right eye
-          [382.32, 175.56], // left eye
-          [341.18, 205.03], // nose
-          [345.12, 250.61], // mouth
-          [252.76, 211.37], // right ear
-          [431.20, 204.93] // left ear
-        ]
-      }
-    ]
-    */
-   
-    //NOTE that BlazeFace orders by highest probability face.  we may want a different logic for primary face.
-    analysisJSON['facialExpressions']=[];
-    for (let i = 0; i < blazeFacePredictions.length; i++) {
-      const start = blazeFacePredictions[i].topLeft;
-      const end = blazeFacePredictions[i].bottomRight;
-      const size = [end[0] - start[0], end[1] - start[1]];
-
-      // Render a rectangle over each detected face.
-      //ctx.fillRect(start[0], start[1], size[0], size[1]);
-         //useful for cropping for the detected faces
-         //clean up crop size issues.
-         if(imageBasics.width-end[0]<0)
-          {
-              end[0]=imageBasics.width
-          }
-          if(imageBasics.height-end[01]<0)
-          {
-              end[1]=imageBasics.height
-          }
-         //console.log();
-      console.log(imageBasics.height-end[1]);
-      var faceCrop = imageBasics.crop({
-        x:start[0],
-        y:start[1],
-        width:end[0] - start[0],
-        height:end[1] - start[1]
-      });
-
-      faceCrop.save('./imagesout/' + analysisJSON.originMediaID + "-" + i + '.png');
-
-      //face emotion test
-      const faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop);
-      console.log('faceExpressionModel: ');
-      console.log(faceExpressionModelpredictions);
-      analysisJSON['facialExpressions'].push(faceExpressionModelpredictions);
-
-
-      if (i==0){
-            tensor = tf.cast(tf.node.decodeImage(faceCrop.resize({width:96,height:96}).toBuffer(),3), 'float32');
-            tensor = tensor.div(255.0);
-            tensor = tensor.expandDims(0);
-            genderresult = genderModel.predict(tensor);
-
-            //convert the thresholds to a label.
-            const confidences = Array.from(genderresult.dataSync());
-            const genderTypes = ['male', 'female'];
-            analysisJSON['primarySubjectGender'] = {
-              "tag": genderTypes[confidences.indexOf(Math.max(...confidences))],
-              "salience": genderresult.arraySync()
-            };
-         }
-      //console.log(genderModel.predict(faceCrop));
-
-     
-
-    }
-  }
-
-  //PHOTO FILTERS and MANIPULATIONS
-
-  analysisJSON['photoManipulation']=  {   "salience": 0.7,
-                                          "photoFilter": [
-                                          "instagram",
-                                          "snapchat",
-                                          "photoshop",
-                                          "unrecognized"
-                                        ]
-                                      }
-
-// NOW PREP THE FINAL RESPONSE
-//SEND 
-  response.locals.analysisComplete = true;
-  console.log(response.locals.analysisComplete);
-
-  //memory manage a bit
-  imgToParse.dispose();
-
-  response.setHeader('Content-Type', 'application/json');
-  response.json(analysisJSON);
-
-  return true;
+      const imgToParse = tf.node.decodeImage(img,3);
+      // const imgToParse4D = tf.node.decodeImage(img,3);
+
+      //CONVERT IMAGE to image object for image-js... useful for many things
+      let imageBasics = await Image.load(img);
+
+      //GET BASIC INFO ABOUT THE IMAGE
+      const imageMeta = await imageMetadata(img,parseCallback);
+      //console.log(imageMeta);
+      analysisJSON['imageMeta']=imageMeta;
+
+      //IMAGE SCENES
+      const imageSceneOut =  await imageScene(imgToParse,parseCallback);
+      //console.log(imageSceneOut);
+      analysisJSON['imageScene']=imageSceneOut;
+
+      //IMAGE OBJECTS
+      const imageObjects=  await imageObjectDetection(img,parseCallback);
+      //console.log(imageObjects);
+      analysisJSON['imageObjects']=imageObjects;
+
+      //NSFW and Person Clothed assessment
+      const imageTox =  await imageNSFW(imgToParse,parseCallback);
+      //console.log(imageTox);
+      analysisJSON['personsClothed']=imageTox;
+
+      //poses
+      const imagePose =  await imagePosing(imgToParse,parseCallback);
+      //console.log(imagePose);
+      analysisJSON['poses']=imagePose;
+
+      //faces and recognition
+      const faces =  await imageFaceDetection(img,parseCallback);
+      //console.log(imageTox);
+      analysisJSON['faces']=faces;
+
+      //PHOTO FILTERS and MANIPULATIONS
+      //NEED TO FINISH TRAINING ON THIS
+
+      //faces and recognition
+      const photoManipulation =  await imageManipulation(imgToParse,parseCallback);
+      //console.log(imageTox);
+      analysisJSON['photoManipulation']=photoManipulation;
+
+
+      /*
+      analysisJSON['photoManipulation']=  {   "salience": 0.7,
+                                              "photoFilter": [
+                                              "instagram",
+                                              "snapchat",
+                                              "photoshop",
+                                              "unrecognized"
+                                            ]
+                                          }
+      */
+
+      // NOW PREP THE FINAL RESPONSE
+      //SEND 
+        response.locals.analysisComplete = true;
+        console.log(response.locals.analysisComplete);
+
+        //memory manage a bit
+        imgToParse.dispose();
+
+        response.setHeader('Content-Type', 'application/json');
+        response.json(analysisJSON);
+
+        return true;
 
 
 };
@@ -1011,7 +1307,7 @@ var textParse = async function (textInput, request, response) {
     response.locals.analysisComplete = false;
 
 
-    response.setTimeout(7000, function(){
+    response.setTimeout(10000, function(){
       // call back function is called when request timed out.
         //memory manage a bit
     //imgToParse.dispose();
