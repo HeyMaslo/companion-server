@@ -36,6 +36,22 @@ curl --location --request POST 'http://localhost:8080/analyzeMedia' \
 
 ```
 
+Call with specifying parsers... set them to 1 or 0.
+```javascript
+curl --location --request POST 'localhost:8080/analyzeMedia' \
+--form 'media=@/home/bigdatakane/Downloads/russ.jpg' \
+--form 'type=image/jpeg' \
+--form 'originMediaID=sdfsadfasdf' \
+--form 'modelsToCall={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}'
+```
+
+```javascript
+curl --location --request POST 'localhost:8080/analyzeText' \
+--form 'media=this is some next to parse out' \
+--form 'originTextID=sdfsadfasdf'
+```
+
+
 
 ### Response:  
 | Field Name | Required? | Description | Example | Notes |

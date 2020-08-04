@@ -457,7 +457,17 @@ var generalParsingFunction = async function(img, parseCallback) {
   return analysisJSON;
 }
 
-//General Error Handler and Response parser
+//general cb error handler
+var cb = async function (error, retval) {
+  if (error) {
+    console.log(error);
+    return;
+  }
+  console.log(retval);
+  return retval;
+}
+
+//General Parser/Model Error Handler and Response parser
 var parseCallback = async function (error, retval) {
   if (error) {
     console.log(error);
@@ -521,7 +531,7 @@ var imageMetadata = async function(img, parseCallback) {
   
         //image quality assessment.
         const { entropy, sharpness } = await sharp(img).stats();
-        analysisJSON['mediaVisualFocus'] = {"blurriness":sharpness,"entropy":entropy};
+        analysisJSON['mediaVisualFocus'] = {"sharpness":sharpness,"entropy":entropy};
   
         var compressed = zlib.deflateSync(img).toString('base64');
         var uncompressed = zlib.inflateSync(new Buffer(compressed, 'base64')).toString();
@@ -529,7 +539,7 @@ var imageMetadata = async function(img, parseCallback) {
         //console.log(Buffer.byteLength(compressed));
        // console.log(Buffer.byteLength(uncompressed));
         analysisJSON['mediaCompressionSize']=Buffer.byteLength(compressed);
-        analysisJSON['mediaCompressionRatio']=Buffer.byteLength(compressed)/Buffer.byteLength(uncompressed);
+        analysisJSON['mediaCompressionPercentage']=Buffer.byteLength(compressed)/Buffer.byteLength(uncompressed);
 
         parseCallback(null, analysisJSON);
   }
@@ -653,7 +663,7 @@ predictionsObjects.forEach(function(v) {
 
         }
         personCrop=imageBasics.crop({x:v.bbox[0],y:v.bbox[1],width:v.bbox[2],height:v.bbox[3]});
-        personCrop.save('./imagesout/body-' + Date.now() + "-" + j + '.png');
+        //personCrop.save('./imagesout/body-' + Date.now() + "-" + j + '.png');
 
         
         var palette = ct.getPalette(personCrop.toBuffer({"format":"jpeg"}), 5);   
@@ -916,7 +926,7 @@ var imageFaceDetection = async function(img, parseCallback) {
               height:end[1] - start[1]
             });
 
-            faceCrop.save('./imagesout/' + Date.now()+ "-" + i + '.png');
+            //faceCrop.save('./imagesout/' + Date.now()+ "-" + i + '.png');
 
             //face emotion test
             const faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop);
@@ -1040,7 +1050,15 @@ var imageManipulation = async function(img, parseCallback) {
 
 
 //This function parses ALL OF IT
-var mediaParse = async function(img, request, response) {
+var mediaParse = async function(img, modelsToCall={
+  "imageMeta":1,
+  "imageSceneOut":1,
+  "imageObjects":1,
+  "imageTox":1,
+  "imagePose":1,
+  "faces":1,
+  "photoManipulation":1
+},request, response) {
   
   //set a time out here for the response so we limit bad requests
   response.locals.analysisComplete = false;
@@ -1184,52 +1202,97 @@ analysisJSON['originMediaID']=request.body.originMediaID;
 analysisJSON['mediaID']=Date.now();
 
 
-// CONVERT IMAGE BUFFER FOR TENSORFLOW
-
-      const imgToParse = tf.node.decodeImage(img,3);
+ 
       // const imgToParse4D = tf.node.decodeImage(img,3);
 
-      //CONVERT IMAGE to image object for image-js... useful for many things
-      let imageBasics = await Image.load(img);
+        //CONVERT IMAGE to image object for image-js... useful for many things
+        //SHRINK LARGE IMAGES
+
+        //CONVERT ALL image manipulations to sharp... 
+        let ImageBasics;
+        let imgToParse;
+        console.log(img.byteLength/1024);
+        if(img.byteLength/1024 > 20000){
+         let imgB = await Image.load(img);
+         ImageBasics = imgB.resize({factor:.3});
+          imgB = null;
+          imgToParse = tf.node.decodeImage(ImageBasics.toBuffer("jpg"),3);
+         console.log(ImageBasics.size);
+        }
+        else{
+          imgToParse = tf.node.decodeImage(img,3);
+          ImageBasics = await Image.load(img);
+        }
+
+             // CONVERT IMAGE BUFFER FOR TENSORFLOW
+
+       
+
+
+
+  /* *****************************************************************
+  
+  CALL THE MODELS.  Need to break these out.
+  Im thinking just make a parameter that says ALL or which ones you want.
+  TODO: gotta make model pre loaders on APP CREATION so this stuff goes much much faster
+
+  ********************************************************************* */
+
+  
+ 
+console.log(JSON.parse(modelsToCall));
+callModels=JSON.parse(modelsToCall);
 
       //GET BASIC INFO ABOUT THE IMAGE
-      const imageMeta = await imageMetadata(img,parseCallback);
-      //console.log(imageMeta);
-      analysisJSON['imageMeta']=imageMeta;
+      if(callModels.imageMeta){
+        const imageMeta = await imageMetadata(img,parseCallback);
+        //console.log(imageMeta);
+        analysisJSON['imageMeta']=imageMeta;
+      }
 
       //IMAGE SCENES
-      const imageSceneOut =  await imageScene(imgToParse,parseCallback);
-      //console.log(imageSceneOut);
-      analysisJSON['imageScene']=imageSceneOut;
+      if(callModels.imageSceneOut){
+        const imageSceneOut =  await imageScene(imgToParse,parseCallback);
+        //console.log(imageSceneOut);
+        analysisJSON['imageScene']=imageSceneOut;
+      }
 
       //IMAGE OBJECTS
-      const imageObjects=  await imageObjectDetection(img,parseCallback);
-      //console.log(imageObjects);
-      analysisJSON['imageObjects']=imageObjects;
+      if(callModels.imageObjects){
+        const imageObjects=  await imageObjectDetection(img,parseCallback);
+        //console.log(imageObjects);
+        analysisJSON['imageObjects']=imageObjects;
+      }
 
       //NSFW and Person Clothed assessment
-      const imageTox =  await imageNSFW(imgToParse,parseCallback);
-      //console.log(imageTox);
-      analysisJSON['personsClothed']=imageTox;
+      if(callModels.imageTox){
+        const imageTox =  await imageNSFW(imgToParse,parseCallback);
+        //console.log(imageTox);
+        analysisJSON['personsClothed']=imageTox;
+      }
 
       //poses
-      const imagePose =  await imagePosing(imgToParse,parseCallback);
-      //console.log(imagePose);
-      analysisJSON['poses']=imagePose;
-
+      if(callModels.imagePose){
+        const imagePose =  await imagePosing(imgToParse,parseCallback);
+        //console.log(imagePose);
+        analysisJSON['poses']=imagePose;
+      }
       //faces and recognition
-      const faces =  await imageFaceDetection(img,parseCallback);
-      //console.log(imageTox);
-      analysisJSON['faces']=faces;
+      if(callModels.faces){
+        const faces =  await imageFaceDetection(img,parseCallback);
+        //console.log(faces);
+        analysisJSON['faces']=faces;
+      }
 
       //PHOTO FILTERS and MANIPULATIONS
       //NEED TO FINISH TRAINING ON THIS
 
-      //faces and recognition
-      const photoManipulation =  await imageManipulation(imgToParse,parseCallback);
-      //console.log(imageTox);
-      analysisJSON['photoManipulation']=photoManipulation;
-
+      //was photo social media filtered?
+      if(callModels.photoManipulation){
+        const photoManipulation =  await imageManipulation(imgToParse,parseCallback);
+        //console.log(photoManipulation);
+        analysisJSON['photoManipulation']=photoManipulation;
+      }
 
       /*
       analysisJSON['photoManipulation']=  {   "salience": 0.7,
@@ -1245,7 +1308,7 @@ analysisJSON['mediaID']=Date.now();
       // NOW PREP THE FINAL RESPONSE
       //SEND 
         response.locals.analysisComplete = true;
-        console.log(response.locals.analysisComplete);
+        //console.log(response.locals.analysisComplete);
 
         //memory manage a bit
         imgToParse.dispose();
@@ -1260,7 +1323,7 @@ analysisJSON['mediaID']=Date.now();
 
 
 //analyzeMedia Post
-app.post('/analyzeMedia',upload.single('media'),function (request, response,next) {
+app.post('/analyzeMedia',upload.single('media'),function (request, response,err) {
 
   //to handle included text use req.body
   // multer docs https://github.com/expressjs/multer
@@ -1268,9 +1331,59 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,next
 
     //console.log(req.file.buffer);
     //console.log(req.body);
+    /*
+          if (request.fileValidationError) {
+            console.log("fileval")
+            return res.send(req.fileValidationError);
+        }
+        else if (!request.file) {
+            return response.send('Please select an image to upload');
+        }
+        else if (err instanceof multer.MulterError) {
+            return response.send(err);
+        }
+        else if (err) {
+            return response.send(err);
+        }
+    */
 
-  var parsedMediaOut =  mediaParse(request.file.buffer, request,response);
-  console.log(parsedMediaOut);
+    //Validate the file
+    //console.log(request.file.originalname);
+    if (request.file!=undefined){
+      if(!request.file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+        request.fileValidationError = 'Only image files are allowed!';
+        response.send("gotta send image signal.")
+        return cb(new Error('Only image files are allowed!'), false);
+      }
+      else{
+        var modelsToCall={
+          "imageMeta":1,
+          "imageSceneOut":1,
+          "imageObjects":1,
+          "imageTox":1,
+          "imagePose":1,
+          "faces":1,
+          "photoManipulation":1
+        };
+        if(request.body.modelsToCall!=undefined){
+            modelsToCall=request.body.modelsToCall;
+        }
+
+
+        var parsedMediaOut =  mediaParse(request.file.buffer,modelsToCall, request,response);
+        //console.log(parsedMediaOut);
+        cb(null, "parsing now!");
+      }
+      
+    }
+    else{
+      response.send("nothing to do without any signal. which is fine.")
+      return cb(new Error('no signal detected.'), false);
+      
+    }
+ 
+
+
 
 
   var dNow=Date.now();
@@ -1290,7 +1403,9 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,next
 
 
 
-//PARSE AND ANALYZE THE IMAGE
+//PARSE AND ANALYZE THE Text
+//This isn't yet that interesting to require seperate functions.
+
 var textParse = async function (textInput, request, response) {
 
   //GET the text
