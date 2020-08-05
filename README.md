@@ -194,7 +194,9 @@ Simple info on packaging up docker and node.  https://nodejs.org/en/docs/guides/
 https://www.aber.ac.uk/~dcswww/Dept/Teaching/CourseNotes/current/CS34110/hough.html
 
 #### Important notes
+
 Some of the node_modules have bugs for tensorflow running local models etc.
+
 One issue in Deeplab here: https://github.com/tensorflow/tfjs/issues/3723
 
 It is important to bring these EXACT node modules contained in this image until that bug is fixed.
