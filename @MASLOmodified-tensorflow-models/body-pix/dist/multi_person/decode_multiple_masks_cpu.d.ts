@@ -1,0 +1,3 @@
+import { Padding, Pose } from '../types';
+export declare function decodeMultipleMasksCPU(segmentation: Uint8Array, longOffsets: Float32Array, posesAboveScore: Pose[], height: number, width: number, stride: number, [inHeight, inWidth]: [number, number], padding: Padding, refineSteps: number, numKptForMatching?: number): Uint8Array[];
+export declare function decodeMultiplePartMasksCPU(segmentation: Uint8Array, longOffsets: Float32Array, partSegmentaion: Uint8Array, posesAboveScore: Pose[], height: number, width: number, stride: number, [inHeight, inWidth]: [number, number], padding: Padding, refineSteps: number, numKptForMatching?: number): Int32Array[];

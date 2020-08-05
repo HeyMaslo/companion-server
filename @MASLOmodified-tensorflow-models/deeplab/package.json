@@ -1,0 +1,77 @@
+{
+  "_from": "@tensorflow-models/deeplab@^0.1.1",
+  "_id": "@tensorflow-models/deeplab@0.1.1",
+  "_inBundle": false,
+  "_integrity": "sha512-IMtCRk37IPcNz7s3NJWEblyDaPVfuRTOSybHhkN17x2vjSD2ygfywTtMY/63jZKlp0Q7Ft/FNcDp0VQlAraWVw==",
+  "_location": "/@tensorflow-models/deeplab",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "@tensorflow-models/deeplab@^0.1.1",
+    "name": "@tensorflow-models/deeplab",
+    "escapedName": "@tensorflow-models%2fdeeplab",
+    "scope": "@tensorflow-models",
+    "rawSpec": "^0.1.1",
+    "saveSpec": null,
+    "fetchSpec": "^0.1.1"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@tensorflow-models/deeplab/-/deeplab-0.1.1.tgz",
+  "_shasum": "1c2665a9f2fecf7eb5daaba4b0de5de6b30348b5",
+  "_spec": "@tensorflow-models/deeplab@^0.1.1",
+  "_where": "/home/bigdatakane/code/companionserver/apis",
+  "bugs": {
+    "url": "https://github.com/tensorflow/tfjs-models/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {},
+  "deprecated": false,
+  "description": "Semantic Segmentation in the Browser: DeepLab v3 Model",
+  "devDependencies": {
+    "@tensorflow/tfjs-converter": "^1.3.1",
+    "@tensorflow/tfjs-core": "^1.3.1",
+    "@types/jasmine": "~3.3.15",
+    "canvas": "^2.5.0",
+    "clang-format": "^1.2.4",
+    "jasmine": "^3.2.0",
+    "jasmine-core": "~3.4.0",
+    "rimraf": "~2.6.2",
+    "rollup": "~1.17.0",
+    "rollup-plugin-node-resolve": "~5.2.0",
+    "rollup-plugin-terser": "^5.1.1",
+    "rollup-plugin-typescript2": "~0.22.0",
+    "ts-node": "~8.3.0",
+    "tslint": "~5.18.0",
+    "typescript": "3.5.3",
+    "yalc": "~1.0.0-pre.32"
+  },
+  "homepage": "https://github.com/tensorflow/tfjs-models#readme",
+  "jsdelivr": "dist/deeplab.min.js",
+  "jsnext:main": "dist/deeplab.esm.js",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "module": "dist/deeplab.esm.js",
+  "name": "@tensorflow-models/deeplab",
+  "peerDependencies": {
+    "@tensorflow/tfjs-converter": "^1.2.5",
+    "@tensorflow/tfjs-core": "^1.2.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tensorflow/tfjs-models.git"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "build-npm": "yarn build && rollup -c",
+    "lint": "tslint -p . -t verbose",
+    "publish-local": "yarn build && rollup -c && yalc push",
+    "test": "ts-node run_tests.ts"
+  },
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/deeplab.min.js",
+  "version": "0.1.1"
+}

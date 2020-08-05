@@ -1,0 +1,10 @@
+import { Color, PartSegmentation, PersonSegmentation } from './types';
+import { SemanticPartSegmentation, SemanticPersonSegmentation } from './types';
+declare type ImageType = HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
+export declare function toMask(personOrPartSegmentation: SemanticPersonSegmentation | SemanticPartSegmentation | PersonSegmentation[] | PartSegmentation[], foreground?: Color, background?: Color, drawContour?: boolean, foregroundIds?: number[]): ImageData;
+export declare function toColoredPartMask(partSegmentation: SemanticPartSegmentation | PartSegmentation[], partColors?: Array<[number, number, number]>): ImageData;
+export declare function drawMask(canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData | null, maskOpacity?: number, maskBlurAmount?: number, flipHorizontal?: boolean): void;
+export declare function drawPixelatedMask(canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData, maskOpacity?: number, maskBlurAmount?: number, flipHorizontal?: boolean, pixelCellWidth?: number): void;
+export declare function drawBokehEffect(canvas: HTMLCanvasElement, image: ImageType, multiPersonSegmentation: SemanticPersonSegmentation | PersonSegmentation[], backgroundBlurAmount?: number, edgeBlurAmount?: number, flipHorizontal?: boolean): void;
+export declare function blurBodyPart(canvas: HTMLCanvasElement, image: ImageType, partSegmentation: SemanticPartSegmentation | PartSegmentation[], bodyPartIdsToBlur?: number[], backgroundBlurAmount?: number, edgeBlurAmount?: number, flipHorizontal?: boolean): void;
+export {};

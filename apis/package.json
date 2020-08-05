@@ -6,14 +6,6 @@
   "dependencies": {
     "@google-cloud/language": "^4.1.0",
     "@teachablemachine/image": "^0.8.4",
-    "@tensorflow-models/blazeface": "0.0.5",
-    "@tensorflow-models/body-pix": "^2.0.5",
-    "@tensorflow-models/coco-ssd": "^2.1.0",
-    "@tensorflow-models/deeplab": "^0.1.1",
-    "@tensorflow-models/facemesh": "0.0.3",
-    "@tensorflow-models/mobilenet": "^2.0.4",
-    "@tensorflow-models/posenet": "^2.2.1",
-    "@tensorflow-models/toxicity": "^1.2.2",
     "@tensorflow/tfjs": "^2.0.1",
     "@tensorflow/tfjs-automl": "^1.0.0",
     "@tensorflow/tfjs-backend-cpu": "^2.0.1",
@@ -58,5 +50,15 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maslo and Russell Foltz-Smith",
-  "license": "MIT License"
+  "license": "MIT License",
+  "bundledDependencies": [
+    "@tensorflow-models/blazeface",
+    "@tensorflow-models/body-pix",
+    "@tensorflow-models/coco-ssd",
+    "@tensorflow-models/deeplab",
+    "@tensorflow-models/facemesh",
+    "@tensorflow-models/mobilenet",
+    "@tensorflow-models/posenet",
+    "@tensorflow-models/toxicity",
+  ]
 }
