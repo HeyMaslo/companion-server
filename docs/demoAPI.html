@@ -7,7 +7,7 @@
 function callMasloText(){
     
     var formdata = new FormData();
-formdata.append("media", document.getElementById('media').value);
+formdata.append("media", document.getElementById('media2').value);
 formdata.append("originTextID", document.getElementById('originTextID').value);
 
 var requestOptions = {
@@ -54,8 +54,8 @@ fetch(url, requestOptions)
 }
 
 function updateResults(result) {
-      console.log(result);
-    document.getElementById("output").innerHTML = result;
+      console.log(JSON.stringify(JSON.parse(result), undefined, 2));
+    document.getElementById("json").innerHTML = JSON.stringify(JSON.parse(result), undefined, 2);
   }
     </script>
     <h1>read docs if you haven't</h1>
@@ -108,7 +108,7 @@ function updateResults(result) {
 					<li id="li_1" >
 		<label class="description" for="element_1">Text or Journal </label>
 		<div>
-			<input id="media" name="media" class="element file" type="textbox"/> 
+			<input id="media2" name="media2" class="element file" type="textbox"/> 
 		</div>  
 		</li>			<li id="li_3" >
 		<label class="description" for="element_3">originTextID </label>
@@ -125,9 +125,9 @@ function updateResults(result) {
 			</ul>
         </form>	
         <h1>Output from Companion Server</h1>
-        <div id="output">
-
-        </div>
+        <pre id="json">
+			
+		</pre>
         <script>document.getElementById('modelsToCall').value = JSON.stringify({"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 0,"imageTox": 1,"imagePose": 1,"faces": 0,"photoManipulation": 1});</script>
     
 </body>
