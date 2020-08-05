@@ -1,3 +1,4 @@
+.gitignore
 node_modules
 apis/imagesout/
 apis/testimages/Sean-6.jpeg
