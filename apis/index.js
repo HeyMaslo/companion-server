@@ -680,6 +680,7 @@ predictionsObjects.forEach(function(v) {
           v.bbox[3]=imageBasics.height-v.bbox[1];
 
         }
+        
         personCrop=imageBasics.crop({x:v.bbox[0],y:v.bbox[1],width:v.bbox[2],height:v.bbox[3]});
         //personCrop.save('./imagesout/body-' + Date.now() + "-" + j + '.png');
 

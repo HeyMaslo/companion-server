@@ -211,23 +211,44 @@ basic image build of app/models:
 
 tag build for dockerhub push:
 
-    docker tag un1crom/maslocompanionserver:latest un1crom/maslocompanionserver:1.0.1
+    docker tag un1crom/maslocompanionserver:latest un1crom/maslocompanionserver:1.0.3
 
 push to docker hub
 
-    docker push un1crom/maslocompanionserver:1.0.1
+    docker push un1crom/maslocompanionserver:1.0.3
 
 run from dockerhub
 
-    docker run un1crom/maslocompanionserver:1.0.1
+    docker run un1crom/maslocompanionserver:1.0.3
+
+    though you probably want to use a port
+
+    docker run -p 41960:8080 un1crom/maslocompanionserver:1.0.3
 
 pull from docker
 
-    docker pull un1crom/maslocompanionserver:1.0.1
+    docker pull un1crom/maslocompanionserver:1.0.3
+
+To stop and start docker images, see docker documentation for "run" and "start" and "rm" etc.
+
+##### To test your new Maslo Companion Server you can start it here
+
+REMEMBER THAT THE PORT 8080 will be forwarded from docker port!
+
+    ````bash
+    curl --location --request POST 'localhost:49160/analyzeMedia' \
+    --form 'media=@/home/bigdatakane/Pictures/GPT3asHyperObject.png' \
+    --form 'type=image/jpeg' \
+    --form 'originMediaID=sdfsadfasdf' \
+    --form 'modelsToCall={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}'
+    ````
+
 
 
 #### Private Clouds/Data Centers
+
 ##### kubernetes
+
 For kubernets orchestration... standard approaches should work.  this is a very simple, stateless nodejs/expressjs container.
 
 ###### simple deployment and service will do it
@@ -252,7 +273,7 @@ deployment
         spec:
         containers:
             - name: app
-            image: un1crom/maslo:1.0.0
+            image: un1crom/maslocompanionserver:1.0.3
             ports:
                 - containerPort: 8080
             imagePullPolicy: Always

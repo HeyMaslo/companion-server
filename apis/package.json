@@ -59,6 +59,6 @@
     "@tensorflow-models/facemesh",
     "@tensorflow-models/mobilenet",
     "@tensorflow-models/posenet",
-    "@tensorflow-models/toxicity",
+    "@tensorflow-models/toxicity"
   ]
 }
