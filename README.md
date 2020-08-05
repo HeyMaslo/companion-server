@@ -70,13 +70,11 @@ REMEMBER THAT THE PORT 8080 will be forwarded from docker port!
 
 ##### Kubernetes
 
-For kubernets orchestration... standard approaches should work.  This is a very simple, stateless nodejs/expressjs container.
+For kubernets orchestration... standard approaches should work. This is a simple, stateless nodejs/expressjs container.
 
-###### Simple deployment and service will do it
+YAMLs for the kube/minikube spin up for testing:
 
-YAMLs for the kube/minikube spin up for testing
-
-deployment
+Deployment
 
     apiVersion: apps/v1
     kind: Deployment
@@ -101,7 +99,7 @@ deployment
         imagePullSecrets:
             - name: regcred
 
-service
+Service
 
     apiVersion: v1
     kind: Service
