@@ -1123,6 +1123,7 @@ var mediaParse = async function(img, modelsToCall,request, response) {
       //memory manage a bit
       imgToParse.dispose();
       response.locals.analysisComplete=true;
+      response.header("Access-Control-Allow-Origin", "*");
       response.send(408);
       });
 
@@ -1295,13 +1296,14 @@ analysisJSON['mediaID']=Date.now();
 
   
  
-
+console.log(typeof(modelsToCall));
+console.log(modelsToCall);
 if(modelsToCall=="" || modelsToCall==null){
   callModels={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}
 }
 else{
   callModels=JSON.parse(modelsToCall);
-  //console.log(callModels.imageMeta)
+  console.log(callModels)
 }
 
 //console.log(callModels.imageMeta);
@@ -1376,7 +1378,7 @@ else{
 
         //memory manage a bit
         imgToParse.dispose();
-
+        response.header("Access-Control-Allow-Origin", "*");
         response.setHeader('Content-Type', 'application/json');
         response.json(analysisJSON);
 
@@ -1413,6 +1415,16 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,err)
 
     //Validate the file
     //console.log(request.file.originalname);
+    var modelsToCall={
+      "imageMeta":1,
+      "imageSceneOut":1,
+      "imageObjects":1,
+      "imageTox":1,
+      "imagePose":1,
+      "faces":1,
+      "photoManipulation":1
+    };
+
     if (request.file!=undefined){
       if(!request.file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
         request.fileValidationError = 'Only image files are allowed!';
@@ -1420,23 +1432,16 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,err)
         return cb(new Error('Only image files are allowed!'), false);
       }
       else{
-        var modelsToCall={
-          "imageMeta":1,
-          "imageSceneOut":1,
-          "imageObjects":1,
-          "imageTox":1,
-          "imagePose":1,
-          "faces":1,
-          "photoManipulation":1
-        };
-        if(request.body.modelsToCall!=undefined){
+
+        if(request.body.modelsToCall!=undefined && request.body.modelsToCall!="" && request.body.modelsToCall!=null){
             modelsToCall=request.body.modelsToCall;
+            console.log(request.body)
         }
         else{
           modelsToCall=={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1};
         }
 
-
+        console.log(modelsToCall)
         var parsedMediaOut =  mediaParse(request.file.buffer,modelsToCall, request,response);
         //console.log(parsedMediaOut);
         cb(null, "parsing now!");
@@ -1493,6 +1498,7 @@ var textParse = async function (textInput, request, response) {
       // call back function is called when request timed out.
         //memory manage a bit
     //imgToParse.dispose();
+    response.header("Access-Control-Allow-Origin", "*");
       response.locals.analysisComplete=true;
       response.send(408);
       });
@@ -1557,7 +1563,7 @@ console.log(response.locals.analysisComplete);
 
 //memory manage a bit
 //textToParse.dispose();
-
+response.header("Access-Control-Allow-Origin", "*");
 response.setHeader('Content-Type', 'application/json');
 response.json(textJSON);
 
