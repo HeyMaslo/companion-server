@@ -97,6 +97,10 @@ https://www.oreilly.com/content/apache-mxnet-in-the-wolfram-language/
 ROS and Image Segmentation
 https://github.com/ethz-asl/deeplab_ros
 
+Candid Photos
+https://grail.cs.washington.edu/projects/candid_video_portraits/paper.pdf
+https://grail.cs.washington.edu/projects/candid_video_portraits/
+
 
 Photo Manipulation Data
 https://www5.cs.fau.de/research/data/image-manipulation/
@@ -151,6 +155,9 @@ https://techcrunch.com/2017/04/28/someone-scraped-40000-tinder-selfies-to-make-a
 
 Get More Data:
 https://storage.googleapis.com/openimages/web/visualizer/index.html?set=train&type=detection&c=%2Fm%2F01d380
+
+These demos are always useful to understand some of the models:
+https://nanonets.com/blog/object-detection-tensorflow-js/
 
 ### Maslo Trained Models
 

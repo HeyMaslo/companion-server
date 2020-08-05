@@ -1,7 +1,7 @@
 {
-  "name": "fulfillment",
-  "version": "1.0.0",
-  "description": "maslo dialogflowfulfillment",
+  "name": "maslocompanionserver",
+  "version": "1.0.3",
+  "description": "maslo companion server",
   "main": "index.js",
   "dependencies": {
     "@google-cloud/language": "^4.1.0",
@@ -57,6 +57,6 @@
     "dev": "nodemon .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Maslo and Russell Foltz-Smith",
+  "license": "MIT License"
 }

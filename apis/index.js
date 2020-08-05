@@ -22,6 +22,7 @@ const zlib = require('zlib');
 const jpeg = require('jpeg-js');
 const jsfeat = require('jsfeat');
 const sharp = require('sharp');
+const localModelURL = "http://localhost:8080/"
 
 
 //TENSORFLOW JS makes it easy to do cheap things with small things
@@ -31,8 +32,9 @@ const sharp = require('sharp');
 
 
 // Tensorflow kernels and libraries
-const tfN = require('@tensorflow/tfjs');
+//const tfN = require('@tensorflow/tfjs');
 const tf = require('@tensorflow/tfjs-node');
+//const tfG = require('@tensorflow/tfjs-node-gpu');
 require('@tensorflow/tfjs-backend-cpu');
 require('@tensorflow/tfjs-backend-webgl');
 const { image } = require('@tensorflow/tfjs-node');
@@ -66,7 +68,11 @@ const deeplab = require('@tensorflow-models/deeplab');
 const loadModelDeepLab = async () => {
   const modelName = 'pascal';   // set to your preferred model, either `pascal`, `cityscapes` or `ade20k`
   const quantizationBytes = 2;  // either 1, 2 or 4
-  const url = 'https://tfhub.dev/tensorflow/tfjs-model/deeplab/pascal/1/default/1/model.json?tfjs-format=file';
+  //const url = 'https://tfhub.dev/tensorflow/tfjs-model/deeplab/pascal/1/default/1/model.json?tfjs-format=file';
+  //locally need to get the right model for each of these settings
+  const url = localModelURL+'tensorflowlocal/deeplab/deeplab_pascal_1_default_1/model.json?tfjs-format=file'
+  console.log(url)
+  //return await deeplab.load({base: modelName, quantizationBytes});
   return await deeplab.load({modelUrl: url,base: modelName, quantizationBytes});
 };
 
@@ -76,14 +82,16 @@ const loadModelDeepLab = async () => {
 const imageSegmentation = async (imageParse) => {
         console.log(imageParse);
         //console.log(loadModelDeepLab);
-
+        //x = tf.tensor4d([1, 2, 3, 4],[1,1,1,1])
         //for now we are just passing back the segments and "colors", but we should pass back the map itself.
        return await loadModelDeepLab()
-            .then((model) => model.segment(imageParse))
+            .then((model) => model.segment(tf.cast(imageParse,"int32")))
              .then(
             ({legend}) =>
                // console.log(`The predicted classes are ${JSON.stringify(legend)}`);
                 legend
+                ).catch((error)=>{
+                  console.log(error)}
                 );
         /* if we want to return the segmentation map
                return await loadModelDeepLab()
@@ -192,7 +200,8 @@ train();
 
 
 // MIDDLE WARE and ROUTE HANDLING
-//serve up models
+
+//serve up models from this static path
 app.use(express.static('models'))
 
 //this is to help parse JSON apis and stuff
@@ -483,6 +492,8 @@ var imageMetadata = async function(img, parseCallback) {
   analysisJSON={};
   if (typeof(img)=="object") {
 
+
+
           //first the basics of image processing
       //https://image-js.github.io/image-js/#imagecomponents
 
@@ -570,6 +581,7 @@ var imageScene = async function(img, parseCallback) {
           analysisJSON['timeOfDay']=timeofDayModelpredictions;
 
           //estimated year of photo
+          //DROP THIS MODEL IN
           analysisJSON['mediaEstimatedCreationDate']= 2018;
      
           //IMAGE SEGMENTATION is useful for Composition Assessments.
@@ -588,10 +600,16 @@ var imageScene = async function(img, parseCallback) {
 
           //const model = await tf.loadGraphModel('file://./models/mobilenet/model.json',{size:224})
 
-          //had to get these to be local mobilenet pick ups...  
 
-          const model = await mobilenet.load();
-          
+
+
+          //had to get these to be local mobilenet pick ups...  
+          const model = await mobilenet.load(modelConfig = {
+            version: 1,
+            alpha: 1.0,
+            modelUrl:localModelURL+'mobilenet/model.json?tfjs-format=file'
+        });
+
           // Classify the image.
           const predictions = await model.classify(img);
           
@@ -621,8 +639,8 @@ var imageObjectDetection = async function(img, parseCallback) {
     let imageBasics = await Image.load(img);
       //Object Detection
 
-    // Load the model.
-    const modelObjects = await cocoSsd.load();
+    // Load the model. LOCALLY
+    const modelObjects = await cocoSsd.load({base: "mobilenet_v2",modelUrl:localModelURL+'tensorflowlocal/ssd_mobilenet_v2_1_default_1/model.json?tfjs-format=file'});
 
     // Classify the image.
     const predictionsObjects = await modelObjects.detect(imgToParse);
@@ -727,7 +745,51 @@ var imagePosing = async function(imgToParse, parseCallback) {
   if (typeof(imgToParse)=="object") {
           //POSES are useful for figuring out the COMPOSITION of the image AND whether someone is laying down.
           //posenet
-          const net = await posenet.load();
+          //const net = await posenet.load();
+           /* 
+          let imgB = await Image.load(imgToParse);
+          tensor = tf.cast(tf.node.decodeImage(imgB.resize({width:224,height:224}).toBuffer("jpg"),3), 'int32');
+          tensor = tensor.div(255.0);
+          tensor = tensor.expandDims(0);
+          console.log(tensor);
+         
+          
+          faster
+          const net = await posenet.load({
+  architecture: 'MobileNetV1',
+  outputStride: 16,
+  inputResolution: { width: 640, height: 480 },
+  multiplier: 0.75
+  modelUrl:localModelURL+'mobilenet/model.json'
+});
+          
+          more accurate posenet... 
+                      await posenet.load({
+              architecture: 'ResNet50',
+              outputStride: 32,
+              inputResolution: { width: 257, height: 200 },
+              quantBytes: 2
+            });
+
+            http://localhost:8080/mobilenet/
+            tensorflowlocal/imagenet_mobilenet_v1_075_224_classification_1_default_1/model.json
+            */
+         
+            //THIS IS VERY FRAGILE.  posenet moves rather quickly, it seems, so this may need to be refactored with more ironclad approaches.... the model is so specific.
+          const net = await posenet.load({
+            architecture: 'MobileNetV1',
+            outputStride: 16,
+            inputResolution: 257,
+            multiplier: 0.75,
+            //modelUrl: "https://storage.googleapis.com/tfjs-models/savedmodel/posenet/mobilenet/float/075/model-stride16.json"
+            modelUrl:localModelURL+'tensorflowlocal/posenet/model-stride16.json'
+          });
+          
+
+          
+
+          // const net = await posenet.load({modelUrl:localModelURL+'mobilenet/model.json'});
+          //const net = await posenet.load();
 
           const predictionPose = await net.estimateSinglePose(imgToParse, {
             flipHorizontal: false
@@ -1033,7 +1095,7 @@ var imageManipulation = async function(img, parseCallback) {
 
 
           //load expression model, then use in cropped face.
-          const photoManipulation = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
+          const photoManipulation = await automl.loadImageClassification('http://localhost:8080/socialPhotos/model.json');
           const photoManipulationpredictions = await photoManipulation.classify(img);
           //console.log('day or night: ');
          // console.log(timeofDayModelpredictions);
@@ -1050,15 +1112,7 @@ var imageManipulation = async function(img, parseCallback) {
 
 
 //This function parses ALL OF IT
-var mediaParse = async function(img, modelsToCall={
-  "imageMeta":1,
-  "imageSceneOut":1,
-  "imageObjects":1,
-  "imageTox":1,
-  "imagePose":1,
-  "faces":1,
-  "photoManipulation":1
-},request, response) {
+var mediaParse = async function(img, modelsToCall,request, response) {
   
   //set a time out here for the response so we limit bad requests
   response.locals.analysisComplete = false;
@@ -1240,8 +1294,17 @@ analysisJSON['mediaID']=Date.now();
 
   
  
-console.log(JSON.parse(modelsToCall));
-callModels=JSON.parse(modelsToCall);
+
+if(modelsToCall=="" || modelsToCall==null){
+  callModels={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}
+}
+else{
+  callModels=JSON.parse(modelsToCall);
+  //console.log(callModels.imageMeta)
+}
+
+//console.log(callModels.imageMeta);
+  
 
       //GET BASIC INFO ABOUT THE IMAGE
       if(callModels.imageMeta){
@@ -1367,6 +1430,9 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,err)
         };
         if(request.body.modelsToCall!=undefined){
             modelsToCall=request.body.modelsToCall;
+        }
+        else{
+          modelsToCall=={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1};
         }
 
 
