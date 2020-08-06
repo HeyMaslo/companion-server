@@ -44,7 +44,7 @@ Run from dockerhub
 
     docker run un1crom/maslocompanionserver:1.0.3
 
-    though you probably want to use a port
+to binds port `8080` of the container to TCP port `41960` or to any other port of the host machine just run the command bellow. Make sure the desirable port is available.
 
     docker run -p 41960:8080 un1crom/maslocompanionserver:1.0.3
 
@@ -58,13 +58,13 @@ To stop and start docker images, see docker documentation for "run" and "start" 
 
 REMEMBER THAT THE PORT 8080 will be forwarded from docker port!
 
-    ````bash
+   
     curl --location --request POST 'localhost:49160/analyzeMedia' \
-    --form 'media=@/home/bigdatakane/Pictures/GPT3asHyperObject.png' \
+    --form 'media=/path/to/your/file.jpeg' \
     --form 'type=image/jpeg' \
     --form 'originMediaID=sdfsadfasdf' \
     --form 'modelsToCall={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}'
-    ````
+   
 
 #### Private Clouds/Data Centers
 
