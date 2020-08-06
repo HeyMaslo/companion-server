@@ -151,25 +151,58 @@ Transparency and engagment is the only possible ethical stance for machine learn
 
 ### The Libraries and Algos
 
+#### Companion Server Currently Activates (as of August 6):
+
+ML Models
+
+* Image Scene: https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
+* Object Detection: https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
+* Body Landmarks: https://github.com/tensorflow/tfjs-models/tree/master/body-pix
+* Body Pose: https://github.com/tensorflow/tfjs-models/tree/master/posenet
+* Text Toxicity: https://github.com/tensorflow/tfjs-models/tree/master/toxicity
+* Face Detection: https://github.com/tensorflow/tfjs-models/tree/master/blazeface
+* Image Segmentation: https://github.com/tensorflow/tfjs-models/tree/master/deeplab
+* Faceland Mark Detection: https://github.com/tensorflow/tfjs-models/tree/master/facemesh
+* MediaPipe: https://github.com/google/mediapipe/tree/master/mediapipe/models
+* NSFW https://github.com/infinitered/nsfwjs#node-js-app
+* Gemder Model: https://github.com/bharathvaj1995/gender-detection-tensorflowjs
+
+##### Maslo Trained Models
+
+Maslo.ai trained some models directly
+
+* ferFace - a very basic model for classifying faces, using many of the available Fer datasets floating around: https://github.com/microsoft/FERPlus etc
+* photoManipulation - a very basic image classification dataset to classify photos manipulated by instagram, snapchat, photoshop etc.
+* Era of Photos - a large dataset of predicting what year/decade an image was created (using the qualities of the image without metadata)
+* Day or Night - simple classification of images from night or day.  could definitely ramp that up
+
+Non ML signal processing
+* Readability Scores: https://www.npmjs.com/package/readability-scores
+* https://www.npmjs.com/package/sentiment
+
+
+#### Tested Models included or possibly going to be included
 Mostly Tensflow
 * Most obvious publicly available models for Tensorflow can be found here: https://tfhub.dev/
 * Image Scene: https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
 * Object Detection: https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
 * Body Landmarks: https://github.com/tensorflow/tfjs-models/tree/master/body-pix
-* Body Post: https://github.com/tensorflow/tfjs-models/tree/master/posenet
+* Body Pose: https://github.com/tensorflow/tfjs-models/tree/master/posenet
 * Text Toxicity: https://github.com/tensorflow/tfjs-models/tree/master/toxicity
-* Readability Scores: https://www.npmjs.com/package/readability-scores
 * Face Detection: https://github.com/tensorflow/tfjs-models/tree/master/blazeface
 * Image Segmentation: https://github.com/tensorflow/tfjs-models/tree/master/deeplab
 * Faceland Mark Detection: https://github.com/tensorflow/tfjs-models/tree/master/facemesh
 * Hand pose: https://github.com/tensorflow/tfjs-models/tree/master/handpose
-* Emotions and More: https://justadudewhohacks.github.io/face-api.js/docs/index.html#getting-started-nodejs
+* Facial Emotions and More: https://justadudewhohacks.github.io/face-api.js/docs/index.html#getting-started-nodejs
 * Face Data: http://shuoyang1213.me/WIDERFACE/
 * body part segmentation: https://github.com/tensorflow/tfjs-models/pull/63
 * MediaPipe: https://github.com/google/mediapipe/tree/master/mediapipe/models
 * NSFW https://github.com/infinitered/nsfwjs#node-js-app
 * Gemder Model: https://github.com/bharathvaj1995/gender-detection-tensorflowjs
+* Sentiment: https://www.npmjs.com/package/sentiment
 
+
+#### Various Model Transfers and Serving Mechanisms
 Some AutoML models loaded into tensorflow
 * https://cloud.google.com/blog/products/gcp/how-to-classify-images-with-tensorflow-using-google-cloud-machine-learning-and-cloud-dataflow
 * https://cloud.google.com/vision/automl/docs/edge-quickstart
@@ -246,14 +279,6 @@ Get More Data:
 These demos are always useful to understand some of the models:
 * https://nanonets.com/blog/object-detection-tensorflow-js/
 
-### Maslo Trained Models
-
-Maslo.ai trained some models directly for use in javascript
-
-* ferFace - a very basic model for classifying faces, using many of the available Fer datasets floating around: https://github.com/microsoft/FERPlus etc
-* photoManipulation - a very basic image classification dataset to classify photos manipulated by instagram, snapchat, photoshop etc.
-* Era of Photos - a large dataset of predicting what year/decade an image was created (using the qualities of the image without metadata)
-* Day or Night - simple classification of images from night or day.  could definitely ramp that up
 
 #### Libraries & things worth worth knowing about
 note:  To speed things up dramatically, install our node backend, which binds to TensorFlow C++, by running npm i @tensorflow/tfjs-node, or npm i @tensorflow/tfjs-node-gpu if you have CUDA. Then call require('@tensorflow/tfjs-node'); (-gpu suffix for CUDA) at the start of your program. Visit https://github.com/tensorflow/tfjs-node for more details.
