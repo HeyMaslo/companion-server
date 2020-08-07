@@ -1,9 +1,15 @@
 # Maslo Companion Server  
 version: 1.03  
-authors: Russell Foltz-Smith @un1crom, Mark Ziler  
+authors: Russell Foltz-Smith @un1crom, Mark Ziler 
+
+![GitHub stars](https://img.shields.io/github/stars/heymaslo/companionserver?style=social)
+[![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/)
+
   
 ## Overview
-Maslo Companion Server is a self contained signal processing and machine learning server deployable to major cloud providers and private data centers or to your local computer. With Companion Server, developers are able to pass unstructured signals for the computer to observe. The server then returns insights about human interactions that can be incorporated into enhanced products. *Note: Original server was using lower level code with WolframEngine, python, tensorflow but it has been simplified and smallified for maintenance and portability reasons.*
+Maslo Companion Server is a self contained signal processing and machine learning server deployable to major cloud providers and private data centers or to your local computer. 
+
+With Companion Server, developers are able to pass unstructured signals for the computer to observe. The server then returns insights about human interactions that can be incorporated into enhanced products. *Note: Original server was using lower level code with WolframEngine, python, tensorflow but it has been simplified and smallified for maintenance and portability reasons.*
 
 The companion server can easily be attached to other systems by way to passing in images or text to it.  In response the companion server supplies back out a set of JSON. 
 
@@ -19,7 +25,7 @@ The companion server can easily be attached to other systems by way to passing i
 
 ### Containers and Installations
 
-Simple info on packaging up docker and node.  https://nodejs.org/en/docs/guides/nodejs-docker-webapp/
+Simple info on packaging up docker and node. *See here for basic concepts: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/*
 
 #### Important notes
 Some of the node_modules have bugs for tensorflow running local models etc. One issue in Deeplab here: https://github.com/tensorflow/tfjs/issues/3723
@@ -171,8 +177,8 @@ ML Models
 
 Maslo.ai trained some models directly
 
-* ferFace - a very basic model for classifying faces, using many of the available Fer datasets floating around: https://github.com/microsoft/FERPlus etc
-* photoManipulation - a very basic image classification dataset to classify photos manipulated by instagram, snapchat, photoshop etc.
+* FerFace - a very basic model for classifying faces, using many of the available Fer datasets floating around: https://github.com/microsoft/FERPlus etc
+* OhotoManipulation - a very basic image classification dataset to classify photos manipulated by instagram, snapchat, photoshop etc.
 * Era of Photos - a large dataset of predicting what year/decade an image was created (using the qualities of the image without metadata)
 * Day or Night - simple classification of images from night or day.  could definitely ramp that up
 
