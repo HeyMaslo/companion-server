@@ -540,7 +540,7 @@ request(options, function (error, response) {
 
   ```
 
-### Developmental Response SON
+### Developmental Response JSON
 
   ```json
   {
