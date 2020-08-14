@@ -207,10 +207,16 @@ app.use(express.static('models'))
 //this is to help parse JSON apis and stuff
 
 // for parsing application/json
-app.use(bodyParser.json()); 
+app.use(bodyParser.raw({ limit: "100mb" }));
 
 // for parsing application/xwww-
-app.use(bodyParser.urlencoded({ extended: true })); 
+app.use(bodyParser.json({ limit: "100mb" }));
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+    limit: "100mb",
+  })
+);
 //form-urlencoded
 
 // for parsing multipart/form-data
@@ -991,8 +997,14 @@ var imageFaceDetection = async function(img, parseCallback) {
 
             //faceCrop.save('./imagesout/' + Date.now()+ "-" + i + '.png');
 
+            console.log('', faceCrop);
+
             //face emotion test
-            const faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop);
+            const faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop)
+              .then((res) => Promise.resolve(res))
+              .catch((err) => {
+                console.log('faceExpressionModel classify error' , err);
+              })
             //console.log('faceExpressionModel: ');
             //console.log(faceExpressionModelpredictions);
             analysisJSON['facialExpressions'].push(faceExpressionModelpredictions);
@@ -1118,13 +1130,13 @@ var mediaParse = async function(img, modelsToCall,request, response) {
   //set a time out here for the response so we limit bad requests
   response.locals.analysisComplete = false;
 
-  response.setTimeout(10000, function(){
+  response.setTimeout(100000, function(){
     // call back function is called when request timed out.
       //memory manage a bit
       imgToParse.dispose();
       response.locals.analysisComplete=true;
       response.header("Access-Control-Allow-Origin", "*");
-      response.send(408);
+      response.sendStatus(408);
       });
 
 //SET UP OUTPUT  
@@ -1390,7 +1402,6 @@ else{
 
 //analyzeMedia Post
 app.post('/analyzeMedia',upload.single('media'),function (request, response,err) {
-
   //to handle included text use req.body
   // multer docs https://github.com/expressjs/multer
   //parse image and classify
