@@ -223,12 +223,8 @@ Wolfram and MXnet:
 * https://www.oreilly.com/content/apache-mxnet-in-the-wolfram-language/
 
 ### Models and Datasets in addition to the Libraries and Algos
-ROS and Image Segmentation
-* https://github.com/ethz-asl/deeplab_ros
-
-Candid Photos
-* https://grail.cs.washington.edu/projects/candid_video_portraits/paper.pdf
-* https://grail.cs.washington.edu/projects/candid_video_portraits/
+* ROS and Image Segmentation: https://github.com/ethz-asl/deeplab_ros
+* Candid Photos: https://grail.cs.washington.edu/projects/candid_video_portraits/
 
 Photo Manipulation Data
 * https://www5.cs.fau.de/research/data/image-manipulation/
@@ -301,7 +297,7 @@ Mildly interesting data
 Interesting image javascript
 * https://29a.ch/libs
 
-## Coming soon
+## Coming Soon
 A lot.  Generative things.  Hyperobject things.
 
 ### Audio
@@ -315,3 +311,11 @@ Generally pretty easy.
 
 ### Story telling and Generative Art
 We are already connecting this server up to Story Writing APIs, chatbots and more.
+
+## Contributing
+
+When contributing to this repository, please first discuss the change you wish to make via issue before making a change.
+
+1. Ensure any install or build dependencies are removed before the end of the layer when doing a build.
+2. Update the README.md with details of changes to the interface, this includes new environment variables, exposed ports, useful file locations and container parameters.
+3. You may merge the Pull Request in once you have the sign-off of two other developers, or if you do not have permission to do that, you may request the second reviewer to merge it for you.
