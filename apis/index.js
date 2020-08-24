@@ -1127,10 +1127,21 @@ var imageManipulation = async function(img, parseCallback) {
 //This function parses ALL OF IT
 var mediaParse = async function(img, modelsToCall,request, response) {
   
-  //set a time out here for the response so we limit bad requests
+ 
   response.locals.analysisComplete = false;
 
-  response.setTimeout(100000, function(){
+   //set a time out here for the response so we limit bad requests
+   //get timeout from API call.
+  var tO =100000;
+    if(request.body.timeOut!=null && request.body.timeOut!=""){
+
+      tO = request.body.originMediaID;
+    }
+    else{
+      tO = 100000;
+    }
+
+  response.setTimeout(tO, function(){
     // call back function is called when request timed out.
       //memory manage a bit
       imgToParse.dispose();
@@ -1503,9 +1514,16 @@ var textParse = async function (textInput, request, response) {
 
     //set a time out here for the response so we limit bad requests
     response.locals.analysisComplete = false;
+    var tO = 100000;
+    if(request.body.timeOut!=null && request.body.timeOut!=""){
 
+      tO = request.body.originMediaID;
+    }
+    else{
+      tO = 100000;
+    }
 
-    response.setTimeout(10000, function(){
+    response.setTimeout(tO, function(){
       // call back function is called when request timed out.
         //memory manage a bit
     //imgToParse.dispose();
