@@ -2,7 +2,7 @@
 
 ![](https://cdn-images-1.medium.com/max/1600/1*Gm7A7w4vJZeNXKHJQxhq7Q.gif)
 
-version: 1.03  
+version: 1.0.04  
 authors: Russel Foltz-Smith, Mark Ziler
 
 ## Overview of the APIs
@@ -36,31 +36,26 @@ API endpoint: /analyzeMedia  POST
 | media | Required | Raw binary of file to be uploaded.  Can include multiple, each to be analyzed individually. |  | max size = 30MB/file, max 50 files per payload.  Limited to image files currently |
 | type | required | Type of media, as a backstop for mimetype detection problems.  values: image, video, audio. | "image" |  |
 | originMediaID |  | originMediaID to be passed back in response. (GUID) | 062fea4d-efdd-4a7f-92b1-4039503efd5b | GUID or INT |
+| timeOut |  | time in milliseconds to let models run | 100000 | INT |
 
 **Sample cURL Post:**  
 ```javascript
 
-curl --location --request POST 'http://localhost:8080/analyzeMedia' \
---header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'media=fileBlob' \
---data-urlencode 'type=image/jpg' \
---data-urlencode 'originalMediaID=sadfadsfasdfasdfasdf'
-
-```
-
-Call with specifying parsers... set them to 1 or 0.
-```javascript
 curl --location --request POST 'localhost:8080/analyzeMedia' \
---form 'media=@/home/bigdatakane/Downloads/russ.jpg' \
+--form 'media=@/home/bigdatakane/Pictures/blog_012717b.jpg' \
 --form 'type=image/jpeg' \
 --form 'originMediaID=sdfsadfasdf' \
---form 'modelsToCall={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}'
+--form 'modelsToCall={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}' \
+--form 'timeOut=1000000'
+
 ```
+
 
 ```javascript
 curl --location --request POST 'localhost:8080/analyzeText' \
 --form 'media=this is some next to parse out' \
---form 'originTextID=sdfsadfasdf'
+--form 'originTextID=sdfsadfasdf' \
+--form 'timeOut=1000000'
 ```
 
 

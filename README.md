@@ -36,19 +36,19 @@ Some of the node_modules have bugs for tensorflow running local models etc. One 
 
 Basic image build of app/models:
 
-    docker build -t un1crom/maslocompanionserver
+    docker build -t [yourdockerhub]/maslocompanionserver
 
 Tag build for dockerhub push:
 
-    docker tag un1crom/maslocompanionserver:latest un1crom/maslocompanionserver:1.0.3
+    docker tag [yourdockerhub]/maslocompanionserver:latest un1crom/maslocompanionserver:[tag.release.minorreleasenumber]
 
 Push to docker hub
 
-    docker push un1crom/maslocompanionserver:1.0.3
+    docker push [yourdockerhub]/maslocompanionserver:1.0.3
 
 Run from dockerhub
 
-    docker run un1crom/maslocompanionserver:1.0.3
+    docker run [yourdockerhub]/maslocompanionserver:1.0.3
 
 to binds port `8080` of the container to TCP port `41960` or to any other port of the host machine just run the command bellow. Make sure the desirable port is available.
 

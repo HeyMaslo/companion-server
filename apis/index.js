@@ -77,7 +77,7 @@ const loadModelDeepLab = async () => {
 };
 
 //load Deeplab - may wanna remove this
-//loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
+loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
 
 const imageSegmentation = async (imageParse) => {
         console.log(imageParse);
@@ -1135,7 +1135,7 @@ var mediaParse = async function(img, modelsToCall,request, response) {
   var tO =100000;
     if(request.body.timeOut!=null && request.body.timeOut!=""){
 
-      tO = request.body.originMediaID;
+      tO = parseInt(request.body.timeOut,10);
     }
     else{
       tO = 100000;
@@ -1517,7 +1517,7 @@ var textParse = async function (textInput, request, response) {
     var tO = 100000;
     if(request.body.timeOut!=null && request.body.timeOut!=""){
 
-      tO = request.body.originMediaID;
+      tO = parseInt(request.body.timeOut,10);
     }
     else{
       tO = 100000;
