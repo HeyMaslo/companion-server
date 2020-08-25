@@ -665,12 +665,13 @@ var ct = new ColorThief();
 predictionsObjects.forEach(function(v) {
   objectClasses[v.class] = (objectClasses[v.class] || 0) + 1;
 
+  j=0;  //this counter doesn't look to be used, may want to remove
 
   //we may want to put some thresholding in here.  like above 90%...
   if(v.class =='cat' || v.class =='dog' || v.class =='horse'){
     isAnimal=v;
   }
-  j=0;
+  
   if(v.class=='person'){
         //build this up from Dominant Colors and percentages from overall image and the crop of pose, face...
        // analysisJSON['personsClothed']=0.8;
