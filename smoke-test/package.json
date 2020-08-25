@@ -1,0 +1,27 @@
+{
+  "name": "smoke-test",
+  "version": "1.0.4",
+  "description": "maslo companion server smoke test",
+  "main": "index.js",
+  "dependencies": {
+    "async": "^3.2.0",
+    "axios": "^0.20.0",
+    "flat": "^5.0.2",
+    "form-data": "^3.0.0",
+    "fs-extra": "^9.0.1",
+    "lodash": "^4.17.20",
+    "request": "^2.88.2"
+  },
+  "engines": {
+    "node": "^12.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node .",
+    "dev": "nodemon .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Erwin",
+  "license": "MIT License",
+  "bundledDependencies": []
+}
