@@ -2,6 +2,7 @@
 .idea/
 node_modules
 apis/imagesout/
+smoke-test/images/
 apis/testimages/Sean-6.jpeg
 apis/testimages/Sean-5.jpeg
 apis/testimages/Sean-4.jpeg

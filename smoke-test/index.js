@@ -12,16 +12,16 @@ var flatten = require('flat');
 
 (async function main() {
 
-   const ws = fs.createWriteStream('./results.txt');
+   const ws = fs.createWriteStream('./Bath-results.json');
    ws.on('error', function (err) {
       console.error(err);
    });
 
    try {
       const tasks = [];
-      const files = await getFiles('./images');
+      const files = await getFiles('./images/Bathroom Selfie');
       files.forEach((f) => tasks.push(async () => processImage(ws, f)));
-      await async.parallelLimit(tasks, 10);
+      await async.parallelLimit(tasks, 5);
    }
    catch(err) {
       console.error(err);
@@ -54,7 +54,7 @@ async function processImage(ws,filePath) {
       const form = new FormData();
       form.append('media', fs.createReadStream(filePath));
       form.append('originMediaID',filePath);
-      form.append('timeOut',1000000);
+      form.append('timeOut',25000);
       form.append('modelsToCall','{"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}');
       //form.append()
 
@@ -69,5 +69,5 @@ async function processImage(ws,filePath) {
 }
 
 async function trackResult( ws, filePath, response) {
-   ws.write(`${JSON.stringify(flatten(_.get(response,'data')),null,null)}${os.EOL}`);
+   ws.write(`${JSON.stringify(flatten(_.get(response,'data')),null,null)},${os.EOL}`);
 }
