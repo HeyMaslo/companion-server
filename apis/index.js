@@ -1,3 +1,4 @@
+"use strict";
 // Basic libraries for nodejs, express application
 const express = require('express');
 const unirest = require('unirest');
@@ -459,7 +460,7 @@ res.json(outJSON);
 //TEMPLATE FOR PARSING FUNCTIONS
 var generalParsingFunction = async function(img, parseCallback) {
   console.log(typeof(img));
-  analysisJSON={};
+ var analysisJSON={};
   if (typeof(img)=="object") {
 
         parseCallback(null, analysisJSON);
@@ -495,7 +496,7 @@ var parseCallback = async function (error, retval) {
 //Basic Image Data
 var imageMetadata = async function(img, parseCallback) {
   console.log(typeof(img));
-  analysisJSON={};
+  var analysisJSON={};
   if (typeof(img)=="object") {
 
 
@@ -571,7 +572,7 @@ var imageMetadata = async function(img, parseCallback) {
 var imageScene = async function(img, parseCallback) {
   //Expects TENSOR version of image...
   console.log(typeof(img));
-  analysisJSON={};
+  var analysisJSON={};
   if (typeof(img)=="object") {
          //TIME OF DAY - use the image segmentation data. https://github.com/tensorflow/tfjs-models/tree/master/deeplab
      // analysisJSON['timeOfDay']={
@@ -610,6 +611,7 @@ var imageScene = async function(img, parseCallback) {
 
 
           //had to get these to be local mobilenet pick ups...  
+          var modelConfig={};
           const model = await mobilenet.load(modelConfig = {
             version: 1,
             alpha: 1.0,
@@ -635,7 +637,7 @@ var imageScene = async function(img, parseCallback) {
 //OBJECT DETECTION
 var imageObjectDetection = async function(img, parseCallback) {
   console.log(typeof(img));
-  analysisJSON={};
+  var analysisJSON={};
   if (typeof(img)=="object") {
 
     const imgToParse = tf.node.decodeImage(img,3);
@@ -665,7 +667,7 @@ var ct = new ColorThief();
 predictionsObjects.forEach(function(v) {
   objectClasses[v.class] = (objectClasses[v.class] || 0) + 1;
 
-  j=0;  //this counter doesn't look to be used, may want to remove
+  var j=0;  //this counter doesn't look to be used, may want to remove
 
   //we may want to put some thresholding in here.  like above 90%...
   if(v.class =='cat' || v.class =='dog' || v.class =='horse'){
@@ -688,7 +690,7 @@ predictionsObjects.forEach(function(v) {
 
         }
         
-        personCrop=imageBasics.crop({x:v.bbox[0],y:v.bbox[1],width:v.bbox[2],height:v.bbox[3]});
+        var personCrop=imageBasics.crop({x:v.bbox[0],y:v.bbox[1],width:v.bbox[2],height:v.bbox[3]});
         //personCrop.save('./imagesout/body-' + Date.now() + "-" + j + '.png');
 
         
@@ -721,7 +723,7 @@ console.log(objectClasses);
 //NSFW
 var imageNSFW = async function(imgToParse, parseCallback) {
   console.log(typeof(imgToParse));
-  analysisJSON={};
+  var analysisJSON={};
   if (typeof(imgToParse)=="object") {
     
       const nsfwModel = await nsfw.load('file://./models/nsfw/',{size: 299}) // To load a local model, nsfw.load('file://./path/to/model/');
@@ -749,7 +751,7 @@ var imageNSFW = async function(imgToParse, parseCallback) {
 //POSES
 var imagePosing = async function(imgToParse, parseCallback) {
   console.log(typeof(imgToParse));
-  analysisJSON={};
+  var analysisJSON={};
   if (typeof(imgToParse)=="object") {
           //POSES are useful for figuring out the COMPOSITION of the image AND whether someone is laying down.
           //posenet
@@ -849,7 +851,7 @@ var imagePosing = async function(imgToParse, parseCallback) {
 //FACIAL DETECTION and EXPRESSIONS
 var imageFaceDetection = async function(img, parseCallback) {
   console.log(typeof(img));
-  analysisJSON={};
+  var analysisJSON={};
   if (typeof(img)=="object") {
 
     const imgToParse = tf.node.decodeImage(img,3);
@@ -983,7 +985,7 @@ var imageFaceDetection = async function(img, parseCallback) {
                 {
                     end[0]=imageBasics.width
                 }
-                if(imageBasics.height-end[01]<0)
+                if(imageBasics.height-end[0]<0)
                 {
                     end[1]=imageBasics.height
                 }
@@ -1012,10 +1014,10 @@ var imageFaceDetection = async function(img, parseCallback) {
 
 
             if (i==0){
-                  tensor = tf.cast(tf.node.decodeImage(faceCrop.resize({width:96,height:96}).toBuffer(),3), 'float32');
+                  var tensor = tf.cast(tf.node.decodeImage(faceCrop.resize({width:96,height:96}).toBuffer(),3), 'float32');
                   tensor = tensor.div(255.0);
                   tensor = tensor.expandDims(0);
-                  genderresult = genderModel.predict(tensor);
+                  var genderresult = genderModel.predict(tensor);
 
                   //convert the thresholds to a label.
                   const confidences = Array.from(genderresult.dataSync());
@@ -1104,7 +1106,7 @@ var imageFaceDetection = async function(img, parseCallback) {
 var imageManipulation = async function(img, parseCallback) {
   //Expects TENSOR version of image...
   console.log(typeof(img));
-  analysisJSON={};
+  var analysisJSON={};
   if (typeof(img)=="object") {
 
 
@@ -1322,6 +1324,7 @@ analysisJSON['mediaID']=Date.now();
  
 console.log(typeof(modelsToCall));
 console.log(modelsToCall);
+var callModels="";
 if(modelsToCall=="" || modelsToCall==null){
   callModels={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}
 }
@@ -1504,10 +1507,10 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,err)
 var textParse = async function (textInput, request, response) {
 
   //GET the text
-  sentences = textInput;
+  var sentences = textInput;
 
   //set the output object up
-  textJSON={};
+  var textJSON={};
 
   //RESPOND BACK WITH ORIGINAL MEDIA ID
   textJSON['originTextID']=request.body.originTextID;
@@ -1543,7 +1546,7 @@ var textParse = async function (textInput, request, response) {
         // labels to include.
 
         textJSON['nsfwLanguage']=[];
-        toxMod = await toxicity.load(threshold);
+       var toxMod = await toxicity.load(threshold);
         textJSON['nsfwLanguage']= await toxMod.classify(sentences).then(predictions => {
           // `predictions` is an array of objects, one for each prediction head,
           // that contains the raw probabilities for each input along with the
@@ -1577,7 +1580,7 @@ var textParse = async function (textInput, request, response) {
         console.log(textJSON['nsfwLanguage'])
 
         //readability
-        readability = readabilityScores(sentences);
+        var readability = readabilityScores(sentences);
         textJSON['readability']=readability;
 
         //sentiment
