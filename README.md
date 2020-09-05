@@ -1,5 +1,5 @@
 # Maslo Companion Server  
-version: 1.03  
+version: 1.0.5  
 authors: Russell Foltz-Smith @un1crom, Mark Ziler 
 
 ![GitHub stars](https://img.shields.io/github/stars/heymaslo/companionserver?style=social)
@@ -44,19 +44,19 @@ Tag build for dockerhub push:
 
 Push to docker hub
 
-    docker push [yourdockerhub]/maslocompanionserver:1.0.3
+    docker push [yourdockerhub]/maslocompanionserver:1.0.5
 
 Run from dockerhub
 
-    docker run [yourdockerhub]/maslocompanionserver:1.0.3
+    docker run [yourdockerhub]/maslocompanionserver:1.0.5
 
 to binds port `8080` of the container to TCP port `41960` or to any other port of the host machine just run the command bellow. Make sure the desirable port is available.
 
-    docker run -p 41960:8080 un1crom/maslocompanionserver:1.0.3
+    docker run -p 41960:8080 un1crom/maslocompanionserver:1.0.5
 
 Pull from docker
 
-    docker pull un1crom/maslocompanionserver:1.0.3
+    docker pull un1crom/maslocompanionserver:1.0.5
 
 To stop and start docker images, see docker documentation for "run" and "start" and "rm" etc.
 
@@ -98,7 +98,7 @@ Deployment
         spec:
         containers:
             - name: app
-            image: un1crom/maslocompanionserver:1.0.3
+            image: un1crom/maslocompanionserver:1.0.5
             ports:
                 - containerPort: 8080
             imagePullPolicy: Always

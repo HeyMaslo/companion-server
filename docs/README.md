@@ -2,7 +2,7 @@
 
 ![](https://cdn-images-1.medium.com/max/1600/1*Gm7A7w4vJZeNXKHJQxhq7Q.gif)
 
-version: 1.0.04  
+version: 1.0.5  
 authors: Russel Foltz-Smith, Mark Ziler
 
 ## Overview of the APIs
