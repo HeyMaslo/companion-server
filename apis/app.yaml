@@ -1,13 +1,22 @@
 runtime: custom
 env: flex
+service: default
+threadsafe: yes
 
 # This sample incurs costs to run on the App Engine flexible environment.
 # The settings below are to reduce costs during testing and are not appropriate
 # for production use. For more information, see:
 # https://cloud.google.com/appengine/docs/flexible/nodejs/configuring-your-app-with-app-yaml
-manual_scaling:
-  instances: 1
+#manual_scaling:
+  #instances: 1
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 3
+  cool_down_period_sec: 120 # default value
 resources:
   cpu: 4
   memory_gb: 6.0
   disk_size_gb: 10
+network:
+  forwarded_ports:
+  - 80:8080
