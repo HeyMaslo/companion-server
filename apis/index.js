@@ -49,8 +49,8 @@ const Sentiment = require('sentiment');
 
 //non-Tensorflow ML libraries
 const tmImage = require('@teachablemachine/image');
-const onnxjs = require('onnxjs');
-require("onnxjs-node");
+//const onnxjs = require('onnxjs');
+//require("onnxjs-node");
 
 // Tensflow trained models.
 //NOTE THAT SOME OF THESE ACCESS THE INTERNET BY DEFAULT.  Change that.
