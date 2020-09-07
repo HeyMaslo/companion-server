@@ -21,7 +21,7 @@ var flatten = require('flat');
       const tasks = [];
       const files = await getFiles('./images/Bathroom Selfie');
       files.forEach((f) => tasks.push(async () => processImage(ws, f)));
-      await async.parallelLimit(tasks, 5);
+      await async.parallelLimit(tasks, 1);
    }
    catch(err) {
       console.error(err);

@@ -453,6 +453,8 @@ var n = d.getHours();
 res.json(outJSON);
 
 
+
+
 }
 );
 
@@ -495,6 +497,9 @@ var parseCallback = async function (error, retval) {
 
 //Basic Image Data
 var imageMetadata = async function(img, parseCallback) {
+  console.log("imageMetaData");
+  console.log(process.memoryUsage());
+
   console.log(typeof(img));
   var analysisJSON={};
   if (typeof(img)=="object") {
@@ -570,6 +575,8 @@ var imageMetadata = async function(img, parseCallback) {
 
 //IMAGE SCENE
 var imageScene = async function(img, parseCallback) {
+  console.log("imageScene");
+  console.log(process.memoryUsage());
   //Expects TENSOR version of image...
   console.log(typeof(img));
   var analysisJSON={};
@@ -636,6 +643,10 @@ var imageScene = async function(img, parseCallback) {
 
 //OBJECT DETECTION
 var imageObjectDetection = async function(img, parseCallback) {
+
+  console.log("imageObject");
+  console.log(process.memoryUsage());
+
   console.log(typeof(img));
   var analysisJSON={};
   if (typeof(img)=="object") {
@@ -681,6 +692,20 @@ predictionsObjects.forEach(function(v) {
         //GOTTA DO THE CROP ROUTINE and EXTRACT BOUNDING BOX
         //bbox: [x, y, width, height]
         //quick check that nothing will go out of bounds
+        //set any negatives to ZERO
+          if(v.bbox[0]<0){
+            v.bbox[0]=0;
+          }
+          if(v.bbox[1]<0){
+            v.bbox[1]=0;
+          }          
+          if(v.bbox[2]<0){
+            v.bbox[2]=0;
+          }
+          if(v.bbox[3]<0){
+            v.bbox[3]=0;
+          }
+
         if(v.bbox[2]+v.bbox[0]>=imageBasics.width){
           v.bbox[2]=imageBasics.width-v.bbox[0];
 
@@ -722,6 +747,9 @@ console.log(objectClasses);
 
 //NSFW
 var imageNSFW = async function(imgToParse, parseCallback) {
+  console.log("imageNSFW");
+  console.log(process.memoryUsage());
+
   console.log(typeof(imgToParse));
   var analysisJSON={};
   if (typeof(imgToParse)=="object") {
@@ -750,6 +778,9 @@ var imageNSFW = async function(imgToParse, parseCallback) {
 
 //POSES
 var imagePosing = async function(imgToParse, parseCallback) {
+  console.log("imagePoses");
+  console.log(process.memoryUsage());
+
   console.log(typeof(imgToParse));
   var analysisJSON={};
   if (typeof(imgToParse)=="object") {
@@ -850,6 +881,8 @@ var imagePosing = async function(imgToParse, parseCallback) {
 
 //FACIAL DETECTION and EXPRESSIONS
 var imageFaceDetection = async function(img, parseCallback) {
+  console.log("imageFaces");
+  console.log(process.memoryUsage());
   console.log(typeof(img));
   var analysisJSON={};
   if (typeof(img)=="object") {
@@ -1104,6 +1137,8 @@ var imageFaceDetection = async function(img, parseCallback) {
 
 //IMAGE SCENE
 var imageManipulation = async function(img, parseCallback) {
+  console.log("imageFiltersManipulation");
+  console.log(process.memoryUsage());
   //Expects TENSOR version of image...
   console.log(typeof(img));
   var analysisJSON={};
@@ -1408,6 +1443,8 @@ else{
         response.header("Access-Control-Allow-Origin", "*");
         response.setHeader('Content-Type', 'application/json');
         response.json(analysisJSON);
+        response.removeAllListeners();
+        response.end();
 
         return true;
 
@@ -1417,6 +1454,9 @@ else{
 
 //analyzeMedia Post
 app.post('/analyzeMedia',upload.single('media'),function (request, response,err) {
+
+  //memory review
+  console.log(process.memoryUsage());
   //to handle included text use req.body
   // multer docs https://github.com/expressjs/multer
   //parse image and classify
@@ -1599,6 +1639,8 @@ console.log(response.locals.analysisComplete);
 response.header("Access-Control-Allow-Origin", "*");
 response.setHeader('Content-Type', 'application/json');
 response.json(textJSON);
+response.removeAllListeners();
+response.end();
 
 return true;
 
