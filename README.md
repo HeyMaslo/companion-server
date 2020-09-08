@@ -23,7 +23,7 @@ The companion server can easily be attached to other systems by way to passing i
 
 ## Getting Started
 
-### Developing from local conatinar
+### Developing from local container
 
 You can run `docker-compose up --build` (within the `/apis` folder) which will start a container that will allow you to start developing locally. It will run `nodemon` to start the server so any change should be reflected inmediately. 
 
