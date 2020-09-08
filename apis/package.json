@@ -3,15 +3,14 @@
   "version": "1.0.6",
   "description": "maslo companion server",
   "main": "index.js",
-  "dependencies": {
-  },
+  "dependencies": {},
   "engines": {
     "node": "^12.0.0"
   },
   "devDependencies": {},
   "scripts": {
     "start": "node .",
-    "dev": "nodemon .",
+    "dev": "nodemon -L index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maslo and Russell Foltz-Smith",

@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+    mcs-local-dev:        
+        # build: 
+        #     context: .
+        #     dockerfile: Dockerfile.dev
+        image: node:12
+        ports:
+            - "41960:8080"
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+        working_dir: /usr/src/app
+        command: bash -c "npm install -g nodemon && npm install && npm run dev"

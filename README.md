@@ -23,6 +23,12 @@ The companion server can easily be attached to other systems by way to passing i
 
 ## Getting Started
 
+### Developing from local conatinar
+
+You can run `docker-compose up --build` (within the `/apis` folder) which will start a container that will allow you to start developing locally. It will run `nodemon` to start the server so any change should be reflected inmediately. 
+
+Make sure you are using the right port (you can change it on the `docker-compose.yml` file). It is set to map `41690` to `8080`.
+
 ### Containers and Installations
 
 Simple info on packaging up docker and node. *See here for basic concepts: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/*
