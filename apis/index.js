@@ -78,7 +78,7 @@ const loadModelDeepLab = async () => {
 };
 
 //load Deeplab - may wanna remove this
-loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
+//loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
 
 const imageSegmentation = async (imageParse) => {
         console.log(imageParse);
@@ -563,14 +563,21 @@ var imageMetadata = async function(img, parseCallback) {
        // console.log(Buffer.byteLength(uncompressed));
         analysisJSON['mediaCompressionSize']=Buffer.byteLength(compressed);
         analysisJSON['mediaCompressionPercentage']=Buffer.byteLength(compressed)/Buffer.byteLength(uncompressed);
+        
+        //memory clean up
+        ct = null;
+        palette = null;
+        imageBasics =null;
+        compressed=null;
+        uncompressed=null;
 
-        parseCallback(null, analysisJSON);
+        return parseCallback(null, analysisJSON);
   }
   else {
     analysisJSON['error']="no image information parsed.";
-    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+    return parseCallback(new Error("image object not supplied to function."),analysisJSON);
   }
-  return analysisJSON;
+  //return analysisJSON;
 }
 
 //IMAGE SCENE
@@ -632,13 +639,13 @@ var imageScene = async function(img, parseCallback) {
          // console.log(predictions);
           analysisJSON['scenes'] = predictions;
 
-        parseCallback(null, analysisJSON);
+        return parseCallback(null, analysisJSON);
   }
   else {
     analysisJSON['error']="no image scene parsed.";
-    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+    return parseCallback(new Error("image object not supplied to function."),analysisJSON);
   }
-  return analysisJSON;
+  //return analysisJSON;
 }
 
 //OBJECT DETECTION
@@ -735,14 +742,18 @@ analysisJSON['isAnimal']=isAnimal;
 analysisJSON['objectCountsbyClass']=objectClasses;
 console.log(objectClasses);
 
-        parseCallback(null, analysisJSON);
+//memory management
+  imgToParse.dispose();
+  imageBasics=null;
+
+       return parseCallback(null, analysisJSON);
         
   }
   else {
     analysisJSON['error']="no image objects parsed.";
-    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+   return parseCallback(new Error("image object not supplied to function."),analysisJSON);
   }
-  return analysisJSON;
+ // return analysisJSON;
 }
 
 //NSFW
@@ -766,14 +777,14 @@ var imageNSFW = async function(imgToParse, parseCallback) {
     //imageNSFW.dispose() // Tensor memory must be managed explicitly (it is not sufficient to let a tf.Tensor go out of scope for its memory to be released).
     console.log(nsfwPredictions)
 
-        parseCallback(null, analysisJSON);
+       return parseCallback(null, analysisJSON);
         
   }
   else {
     analysisJSON['error']="no NSFW content parsed.";
-    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+   return parseCallback(new Error("image object not supplied to function."),analysisJSON);
   }
-  return analysisJSON;
+  //return analysisJSON;
 }
 
 //POSES
@@ -869,14 +880,14 @@ var imagePosing = async function(imgToParse, parseCallback) {
           analysisJSON['pose']=poseLabel;
           analysisJSON['poseLandmarks'] = predictionPose;
 
-        parseCallback(null, analysisJSON);
+       return parseCallback(null, analysisJSON);
         
   }
   else {
     analysisJSON['error']="no NSFW content parsed.";
-    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+   return parseCallback(new Error("image object not supplied to function."),analysisJSON);
   }
-  return analysisJSON;
+  //return analysisJSON;
 }
 
 //FACIAL DETECTION and EXPRESSIONS
@@ -1124,14 +1135,14 @@ var imageFaceDetection = async function(img, parseCallback) {
           }
 
 
-        parseCallback(null, analysisJSON);
+       return parseCallback(null, analysisJSON);
         
   }
   else {
     analysisJSON['error']="no image faces parsed.";
-    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+    return parseCallback(new Error("image object not supplied to function."),analysisJSON);
   }
-  return analysisJSON;
+  //return analysisJSON;
 }
 
 
@@ -1152,13 +1163,13 @@ var imageManipulation = async function(img, parseCallback) {
          // console.log(timeofDayModelpredictions);
           analysisJSON['manipulations']=photoManipulationpredictions;
 
-        parseCallback(null, analysisJSON);
+        return parseCallback(null, analysisJSON);
   }
   else {
     analysisJSON['error']="no image scene parsed.";
-    parseCallback(new Error("image object not supplied to function."),analysisJSON);
+    return parseCallback(new Error("image object not supplied to function."),analysisJSON);
   }
-  return analysisJSON;
+  //return analysisJSON;
 }
 
 
@@ -1167,6 +1178,9 @@ var mediaParse = async function(img, modelsToCall,request, response) {
   
  
   response.locals.analysisComplete = false;
+  var analysisJSON= {};
+  let ImageBasics;
+  let imgToParse;
 
    //set a time out here for the response so we limit bad requests
    //get timeout from API call.
@@ -1182,135 +1196,16 @@ var mediaParse = async function(img, modelsToCall,request, response) {
   response.setTimeout(tO, function(){
     // call back function is called when request timed out.
       //memory manage a bit
-      imgToParse.dispose();
+     // imgToParse.dispose();
+      imgToParse=null;
+      analysisJSON=null;
+      ImageBasics=null;
       response.locals.analysisComplete=true;
       response.header("Access-Control-Allow-Origin", "*");
       response.sendStatus(408);
       });
 
-//SET UP OUTPUT  
-var analysisJSONReference =
-{
-  "originMediaID": "062fea4d-efdd-4a7f-92b1-4039503efd5b",
-  "mediaID": 3919454996583159000,
-  "scenes": [
-    {
-      "tag": "travel photo",
-      "salience": 0.85
-    },
-    {
-      "tag": "outside",
-      "salience": 0.65
-    }
-  ],
-  "timeOfDay": {
-    "tag": "morning",
-    "salience": 0.88
-  },
-  "emotionTags": [
-    {
-      "tag": "sad",
-      "salience": 0.98
-    },
-    {
-      "tag": "happy",
-      "salience": 0.82
-    },
-    {
-      "tag": "laughing",
-      "salience": 0.76
-    }
-  ],
-  "sentiment": 0.6,
-  "facialExpressions": [
-    {
-      "tag": "smiling",
-      "salience": 0.92
-    },
-    {
-      "tag": "frowning",
-      "salience": 0.78
-    },
-    {
-      "tag": "anger",
-      "salience": 0.51
-    },
-    {
-      "tag": "surprise",
-      "salience": 0.24
-    }
-  ],
-  "faceCount": 4,
-  "personsCount": 4,
-  "personsClothed": 0.8,
-  "mediaImageResolution": {
-    "height": 1000,
-    "width": 1000
-  },
-  "mediaFileSize": 23432,
-  "mediaDominantColors": [
-    "#FFFFFF",
-    "#EEEEEE"
-  ],
-  "mediaCompressionSize": 120,
-  "mediaVisualFocus": [
-    "blurry"
-  ],
-  "mediaEstimatedCreationDate": 2018,
-  "mediaInterestingness": 0.3,
-  "primarySubjectFaceVisible": {
-    "visibility": 0.6,
-    "boundingX": 225,
-    "boundingY": 52,
-    "boundingHeight": 375,
-    "boundingWidth": 280
-  },
-  "secondarySubjectFaceVisible": {
-    "visibility": 0.6,
-    "boundingX": 225,
-    "boundingY": 52,
-    "boundingHeight": 375,
-    "boundingWidth": 280
-  },
-  "isAnimal": [
-    {
-      "tag": "dog",
-      "salience": 0.89
-    },
-    {
-      "tag": "tiger",
-      "salience": 0.25
-    }
-  ],
-  "primarySubjectGender": {
-    "tag": "female",
-    "salience": 0.95
-  },
-  "pose": [
-    "selfie",
-    "front",
-    "side",
-    "fullbody",
-    "etc."
-  ],
-  "composition": [
-    "rule of thirds",
-    "portrait",
-    "landscape",
-    "etc."
-  ],
-  "photoManipulation": 0.7,
-  "photoFilter": [
-    "instagram",
-    "snapchat",
-    "photoshop",
-    "unrecognized"
-  ]
-};
 
-var analysisJSON= {};
-
-//console.log(request.body);
 
 
 
@@ -1326,8 +1221,7 @@ analysisJSON['mediaID']=Date.now();
         //SHRINK LARGE IMAGES
 
         //CONVERT ALL image manipulations to sharp... 
-        let ImageBasics;
-        let imgToParse;
+
         console.log(img.byteLength/1024);
         if(img.byteLength/1024 > 20000){
          let imgB = await Image.load(img);
@@ -1373,43 +1267,49 @@ else{
 
       //GET BASIC INFO ABOUT THE IMAGE
       if(callModels.imageMeta){
-        const imageMeta = await imageMetadata(img,parseCallback);
+        var imageMeta = await imageMetadata(img,parseCallback);
         //console.log(imageMeta);
         analysisJSON['imageMeta']=imageMeta;
+        imageMeta=null;
       }
 
       //IMAGE SCENES
       if(callModels.imageSceneOut){
-        const imageSceneOut =  await imageScene(imgToParse,parseCallback);
+        var imageSceneOut =  await imageScene(imgToParse,parseCallback);
         //console.log(imageSceneOut);
         analysisJSON['imageScene']=imageSceneOut;
+        imageSceneOut =null;
       }
 
       //IMAGE OBJECTS
       if(callModels.imageObjects){
-        const imageObjects=  await imageObjectDetection(img,parseCallback);
+        var imageObjects=  await imageObjectDetection(img,parseCallback);
         //console.log(imageObjects);
         analysisJSON['imageObjects']=imageObjects;
+        imageObjects=null;
       }
 
       //NSFW and Person Clothed assessment
       if(callModels.imageTox){
-        const imageTox =  await imageNSFW(imgToParse,parseCallback);
+        var imageTox =  await imageNSFW(imgToParse,parseCallback);
         //console.log(imageTox);
         analysisJSON['personsClothed']=imageTox;
+        imageTox=null;
       }
 
       //poses
       if(callModels.imagePose){
-        const imagePose =  await imagePosing(imgToParse,parseCallback);
+        var imagePose =  await imagePosing(imgToParse,parseCallback);
         //console.log(imagePose);
         analysisJSON['poses']=imagePose;
+        imagePose=null;
       }
       //faces and recognition
       if(callModels.faces){
-        const faces =  await imageFaceDetection(img,parseCallback);
+        var faces =  await imageFaceDetection(img,parseCallback);
         //console.log(faces);
         analysisJSON['faces']=faces;
+        faces=null;
       }
 
       //PHOTO FILTERS and MANIPULATIONS
@@ -1417,9 +1317,10 @@ else{
 
       //was photo social media filtered?
       if(callModels.photoManipulation){
-        const photoManipulation =  await imageManipulation(imgToParse,parseCallback);
+        var photoManipulation =  await imageManipulation(imgToParse,parseCallback);
         //console.log(photoManipulation);
         analysisJSON['photoManipulation']=photoManipulation;
+        photoManipulation=null;
       }
 
       /*
@@ -1439,10 +1340,14 @@ else{
         //console.log(response.locals.analysisComplete);
 
         //memory manage a bit
-        imgToParse.dispose();
+        //imgToParse.dispose();
+        imgToParse=null;
+        ImageBasics=null;
+
         response.header("Access-Control-Allow-Origin", "*");
         response.setHeader('Content-Type', 'application/json');
         response.json(analysisJSON);
+        analysisJSON = {};
         response.removeAllListeners();
         response.end();
 
@@ -1510,7 +1415,7 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,err)
         console.log(modelsToCall)
         var parsedMediaOut =  mediaParse(request.file.buffer,modelsToCall, request,response);
         //console.log(parsedMediaOut);
-        cb(null, "parsing now!");
+        return cb(null, "parsing now!");
       }
       
     }
