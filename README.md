@@ -1,3 +1,5 @@
+![A Server For Every Signal](https://github.com/HeyMaslo/companionserver/blob/master/.github/maslo_companion_server.001.jpeg)
+
 # Maslo Companion Server  
 version: 1.0.5  
 authors: Russell Foltz-Smith @un1crom, Mark Ziler 
