@@ -892,9 +892,9 @@ var imagePosing = async function(imgToParse, parseCallback) {
 
 //FACIAL DETECTION and EXPRESSIONS
 var imageFaceDetection = async function(img, parseCallback) {
-  console.log("imageFaces");
-  console.log(process.memoryUsage());
-  console.log(typeof(img));
+  console.info("Starting Facial Detection", "imageFaces");
+  console.log("Memory Usage", process.memoryUsage());
+  console.log("Type of Image", typeof(img));
   var analysisJSON={};
   if (typeof(img)=="object") {
 
@@ -1044,14 +1044,17 @@ var imageFaceDetection = async function(img, parseCallback) {
 
             //faceCrop.save('./imagesout/' + Date.now()+ "-" + i + '.png');
 
-            console.log('', faceCrop);
+            console.log('faceCrop: ', faceCrop);
 
             //face emotion test
+            console.log('Start of Face Emotion Test')
             const faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop)
-              .then((res) => Promise.resolve(res))
-              .catch((err) => {
-                console.log('faceExpressionModel classify error' , err);
-              })
+            .then((res) => Promise.resolve(res))
+            .catch((err) => {
+              console.log('faceExpressionModel classify error' , err);
+            })
+            console.log('End of Face Emotion Test')
+
             //console.log('faceExpressionModel: ');
             //console.log(faceExpressionModelpredictions);
             analysisJSON['facialExpressions'].push(faceExpressionModelpredictions);
@@ -1081,27 +1084,28 @@ var imageFaceDetection = async function(img, parseCallback) {
 
         //FACE MESH FOR FINER GRAIN
         
+        try { 
           // Load the MediaPipe facemesh model.
-          const facemeshmodel = await facemesh.load({maxFaces:3});
-        
+          const facemeshmodel = await facemesh.load({maxFaces:3});        
           // Pass in a video stream (or an image, canvas, or 3D tensor) to obtain an
           // array of detected faces from the MediaPipe graph.
-          const predictions = await facemeshmodel.estimateFaces(imgToParse);
-        
-          if (predictions.length > 0) {
-            /*
-            `predictions` is an array of objects describing each detected face, for example:
-        
-            [
-              {
-                faceInViewConfidence: 1, // The probability of a face being present.
-                boundingBox: { // The bounding box surrounding the face.
-                  topLeft: [232.28, 145.26],
-                  bottomRight: [449.75, 308.36],
-                },
-                mesh: [ // The 3D coordinates of each facial landmark.
-                  [92.07, 119.49, -17.54],
-                  [91.97, 102.52, -30.54],
+          await tf.setBackend('cpu'); 
+            const predictions = await facemeshmodel.estimateFaces(imgToParse);
+            
+            if (predictions.length > 0) {
+              /*
+              `predictions` is an array of objects describing each detected face, for example:
+              
+              [
+                {
+                  faceInViewConfidence: 1, // The probability of a face being present.
+                  boundingBox: { // The bounding box surrounding the face.
+                    topLeft: [232.28, 145.26],
+                    bottomRight: [449.75, 308.36],
+                  },
+                  mesh: [ // The 3D coordinates of each facial landmark.
+                    [92.07, 119.49, -17.54],
+                    [91.97, 102.52, -30.54],
                   ...
                 ],
                 scaledMesh: [ // The 3D coordinates of each facial landmark, normalized.
@@ -1109,33 +1113,36 @@ var imageFaceDetection = async function(img, parseCallback) {
                   [322.18, 263.95, -30.54]
                 ],
                 annotations: { // Semantic groupings of the `scaledMesh` coordinates.
-                  silhouette: [
-                    [326.19, 124.72, -3.82],
-                    [351.06, 126.30, -3.00],
-                    ...
-                  ],
+                silhouette: [
+                  [326.19, 124.72, -3.82],
+                  [351.06, 126.30, -3.00],
                   ...
-                }
+                ],
+                ...
               }
-            ]
-            */
-
-
-            analysisJSON["faceMesh"]={};
-            for (let i = 0; i < predictions.length; i++) {
-              //const keypoints = predictions[i].faceInViewConfidence;
-              analysisJSON['faceMesh']={"faceinview":predictions[i].faceInViewConfidence,"boundingbox":predictions[i].boundingBox};
-              // Log facial keypoints.
-             // for (let i = 0; i < keypoints.length; i++) {
+            }
+          ]
+          */
+         
+         
+         analysisJSON["faceMesh"]={};
+         for (let i = 0; i < predictions.length; i++) {
+           //const keypoints = predictions[i].faceInViewConfidence;
+           analysisJSON['faceMesh']={"faceinview":predictions[i].faceInViewConfidence,"boundingbox":predictions[i].boundingBox};
+           // Log facial keypoints.
+           // for (let i = 0; i < keypoints.length; i++) {
              //   const [x, y, z] = keypoints[i];
-        //
-               // console.log(`Keypoint ${i}: [${x}, ${y}, ${z}]`);
+             //
+             // console.log(`Keypoint ${i}: [${x}, ${y}, ${z}]`);
              // }
             }
           }
-
-
-       return parseCallback(null, analysisJSON);
+          
+        } catch (error) { 
+          console.log(error)
+        }
+          
+          return parseCallback(null, analysisJSON);
         
   }
   else {
@@ -1174,219 +1181,145 @@ var imageManipulation = async function(img, parseCallback) {
 
 
 //This function parses ALL OF IT
-var mediaParse = async function(img, modelsToCall,request, response) {
-  
- 
-  response.locals.analysisComplete = false;
-  var analysisJSON= {};
+var mediaParse = async function(originMediaID, img, modelsToCall) { 
+
+  let analysisComplete = false;
+  let analysisJSON= {};
   let ImageBasics;
   let imgToParse;
 
-   //set a time out here for the response so we limit bad requests
-   //get timeout from API call.
-  var tO =100000;
-    if(request.body.timeOut!=null && request.body.timeOut!=""){
+  //RESPOND BACK WITH ORIGINAL MEDIA ID
+  analysisJSON['originMediaID']=originMediaID;
+  analysisJSON['mediaID']=Date.now();
 
-      tO = parseInt(request.body.timeOut,10);
+  //CONVERT IMAGE to image object for image-js... useful for many things
+  //SHRINK LARGE IMAGES
+  //CONVERT ALL image manipulations to sharp... 
+
+  console.log("Image bytes / 1024: ", img.byteLength/1024);
+  try { 
+    if(img.byteLength/1024 > 20000){
+      let imgB = await Image.load(img);
+      ImageBasics = imgB.resize({factor:.3});
+      imgB = null;
+      imgToParse = tf.node.decodeImage(ImageBasics.toBuffer("jpg"),3);
+      console.log("Image Size: ", ImageBasics.size);
     }
     else{
-      tO = 100000;
+      await tf.setBackend('tensorflow');
+      imgToParse = tf.node.decodeImage(img,3);
+      ImageBasics = await Image.load(img);
     }
+  } catch (error) { 
+    return { 
+      error: true,
+      message: error,
+      statusCode: 500,
+      data: null
+    }
+  }
 
-  response.setTimeout(tO, function(){
-    // call back function is called when request timed out.
-      //memory manage a bit
-     // imgToParse.dispose();
-      imgToParse=null;
-      analysisJSON=null;
-      ImageBasics=null;
-      response.locals.analysisComplete=true;
-      response.header("Access-Control-Allow-Origin", "*");
-      response.sendStatus(408);
-      });
-
-
-
-
-
-//RESPOND BACK WITH ORIGINAL MEDIA ID
-analysisJSON['originMediaID']=request.body.originMediaID;
-analysisJSON['mediaID']=Date.now();
-
-
- 
-      // const imgToParse4D = tf.node.decodeImage(img,3);
-
-        //CONVERT IMAGE to image object for image-js... useful for many things
-        //SHRINK LARGE IMAGES
-
-        //CONVERT ALL image manipulations to sharp... 
-
-        console.log(img.byteLength/1024);
-        if(img.byteLength/1024 > 20000){
-         let imgB = await Image.load(img);
-         ImageBasics = imgB.resize({factor:.3});
-          imgB = null;
-          imgToParse = tf.node.decodeImage(ImageBasics.toBuffer("jpg"),3);
-         console.log(ImageBasics.size);
-        }
-        else{
-          imgToParse = tf.node.decodeImage(img,3);
-          ImageBasics = await Image.load(img);
-        }
-
-             // CONVERT IMAGE BUFFER FOR TENSORFLOW
-
-       
-
-
-
-  /* *****************************************************************
-  
+  /* *****************************************************************  
   CALL THE MODELS.  Need to break these out.
   Im thinking just make a parameter that says ALL or which ones you want.
   TODO: gotta make model pre loaders on APP CREATION so this stuff goes much much faster
+  ********************************************************************* */  
+  console.log(typeof(modelsToCall));
+  console.log("Models to call: ", modelsToCall);   
 
-  ********************************************************************* */
+  let callModels = JSON.parse(modelsToCall);
 
-  
- 
-console.log(typeof(modelsToCall));
-console.log(modelsToCall);
-var callModels="";
-if(modelsToCall=="" || modelsToCall==null){
-  callModels={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}
-}
-else{
-  callModels=JSON.parse(modelsToCall);
-  console.log(callModels)
-}
+  //GET BASIC INFO ABOUT THE IMAGE
+  if(callModels.imageMeta){
+    var imageMeta = await imageMetadata(img,parseCallback);
+    //console.log(imageMeta);
+    analysisJSON['imageMeta']=imageMeta;
+    imageMeta=null;
+  }
 
-//console.log(callModels.imageMeta);
-  
+  //IMAGE SCENES
+  if(callModels.imageSceneOut){
+    var imageSceneOut =  await imageScene(imgToParse,parseCallback);
+    //console.log(imageSceneOut);
+    analysisJSON['imageScene']=imageSceneOut;
+    imageSceneOut =null;
+  }
 
-      //GET BASIC INFO ABOUT THE IMAGE
-      if(callModels.imageMeta){
-        var imageMeta = await imageMetadata(img,parseCallback);
-        //console.log(imageMeta);
-        analysisJSON['imageMeta']=imageMeta;
-        imageMeta=null;
-      }
+  //IMAGE OBJECTS
+  if(callModels.imageObjects){
+    var imageObjects=  await imageObjectDetection(img,parseCallback);
+    //console.log(imageObjects);
+    analysisJSON['imageObjects']=imageObjects;
+    imageObjects=null;
+  }
 
-      //IMAGE SCENES
-      if(callModels.imageSceneOut){
-        var imageSceneOut =  await imageScene(imgToParse,parseCallback);
-        //console.log(imageSceneOut);
-        analysisJSON['imageScene']=imageSceneOut;
-        imageSceneOut =null;
-      }
+  //NSFW and Person Clothed assessment
+  if(callModels.imageTox){
+    var imageTox =  await imageNSFW(imgToParse,parseCallback);
+    //console.log(imageTox);
+    analysisJSON['personsClothed']=imageTox;
+    imageTox=null;
+  }
 
-      //IMAGE OBJECTS
-      if(callModels.imageObjects){
-        var imageObjects=  await imageObjectDetection(img,parseCallback);
-        //console.log(imageObjects);
-        analysisJSON['imageObjects']=imageObjects;
-        imageObjects=null;
-      }
+  //poses
+  if(callModels.imagePose){
+    var imagePose =  await imagePosing(imgToParse,parseCallback);
+    //console.log(imagePose);
+    analysisJSON['poses']=imagePose;
+    imagePose=null;
+  }
 
-      //NSFW and Person Clothed assessment
-      if(callModels.imageTox){
-        var imageTox =  await imageNSFW(imgToParse,parseCallback);
-        //console.log(imageTox);
-        analysisJSON['personsClothed']=imageTox;
-        imageTox=null;
-      }
+  //faces and recognition
+  if(callModels.faces){
+    try { 
+      var faces =  await imageFaceDetection(img,parseCallback);
+    } catch (error) {
+      console.error(error);
+    }
+    //console.log(faces);
+    analysisJSON['faces']=faces;
+    faces=null;
+  }
 
-      //poses
-      if(callModels.imagePose){
-        var imagePose =  await imagePosing(imgToParse,parseCallback);
-        //console.log(imagePose);
-        analysisJSON['poses']=imagePose;
-        imagePose=null;
-      }
-      //faces and recognition
-      if(callModels.faces){
-        var faces =  await imageFaceDetection(img,parseCallback);
-        //console.log(faces);
-        analysisJSON['faces']=faces;
-        faces=null;
-      }
+  //PHOTO FILTERS and MANIPULATIONS
+  //NEED TO FINISH TRAINING ON THIS
 
-      //PHOTO FILTERS and MANIPULATIONS
-      //NEED TO FINISH TRAINING ON THIS
+  //was photo social media filtered?
+  if(callModels.photoManipulation){
+    var photoManipulation =  await imageManipulation(imgToParse,parseCallback);
+    //console.log(photoManipulation);
+    analysisJSON['photoManipulation']=photoManipulation;
+    photoManipulation=null;
+  }
 
-      //was photo social media filtered?
-      if(callModels.photoManipulation){
-        var photoManipulation =  await imageManipulation(imgToParse,parseCallback);
-        //console.log(photoManipulation);
-        analysisJSON['photoManipulation']=photoManipulation;
-        photoManipulation=null;
-      }
+  // NOW PREP THE FINAL RESPONSE
+  //SEND 
+  analysisComplete = true;
+  //memory manage a bit
+  //imgToParse.dispose();
+  imgToParse=null;
+  ImageBasics=null;
 
-      /*
-      analysisJSON['photoManipulation']=  {   "salience": 0.7,
-                                              "photoFilter": [
-                                              "instagram",
-                                              "snapchat",
-                                              "photoshop",
-                                              "unrecognized"
-                                            ]
-                                          }
-      */
-
-      // NOW PREP THE FINAL RESPONSE
-      //SEND 
-        response.locals.analysisComplete = true;
-        //console.log(response.locals.analysisComplete);
-
-        //memory manage a bit
-        //imgToParse.dispose();
-        imgToParse=null;
-        ImageBasics=null;
-
-        response.header("Access-Control-Allow-Origin", "*");
-        response.setHeader('Content-Type', 'application/json');
-        response.json(analysisJSON);
-        analysisJSON = {};
-        response.removeAllListeners();
-        response.end();
-
-        return true;
-
-
+  return { 
+    error: false,
+    message: '',
+    statusCode: 200,
+    data: analysisJSON
+  }
 };
 
 
-//analyzeMedia Post
-app.post('/analyzeMedia',upload.single('media'),function (request, response,err) {
+/**
+ * 
+ * POST  /analyzeMedia
+ * 
+ */
+app.post('/analyzeMedia', upload.single('media'),  async function (request, response, next) {
 
   //memory review
-  console.log(process.memoryUsage());
-  //to handle included text use req.body
-  // multer docs https://github.com/expressjs/multer
-  //parse image and classify
+  console.log("Memory Usage: ", process.memoryUsage());
 
-    //console.log(req.file.buffer);
-    //console.log(req.body);
-    /*
-          if (request.fileValidationError) {
-            console.log("fileval")
-            return res.send(req.fileValidationError);
-        }
-        else if (!request.file) {
-            return response.send('Please select an image to upload');
-        }
-        else if (err instanceof multer.MulterError) {
-            return response.send(err);
-        }
-        else if (err) {
-            return response.send(err);
-        }
-    */
-
-    //Validate the file
-    //console.log(request.file.originalname);
-    var modelsToCall={
+  var modelsToCall={
       "imageMeta":1,
       "imageSceneOut":1,
       "imageObjects":1,
@@ -1396,51 +1329,68 @@ app.post('/analyzeMedia',upload.single('media'),function (request, response,err)
       "photoManipulation":1
     };
 
-    if (request.file!=undefined){
-      if(!request.file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
-        request.fileValidationError = 'Only image files are allowed!';
-        response.send("gotta send image signal.")
-        return cb(new Error('Only image files are allowed!'), false);
+  if (request.file!=undefined){
+    if(!request.file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+      request.fileValidationError = 'Only image files are allowed!';
+      response.send("gotta send image signal.")
+      return cb(new Error('Only image files are allowed!'), false);
+    } 
+    else {
+      if(request.body.modelsToCall!=undefined && request.body.modelsToCall!="" && request.body.modelsToCall!=null){
+        modelsToCall=request.body.modelsToCall;        
       }
-      else{
+          
+      var timeOut = request.body.timeOut;
+      var tO =100000;
+      if(timeOut!=null && timeOut!=""){
+        tO = parseInt(timeOut,10);
+      } 
+      else {
+        tO = 100000;
+      }
 
-        if(request.body.modelsToCall!=undefined && request.body.modelsToCall!="" && request.body.modelsToCall!=null){
-            modelsToCall=request.body.modelsToCall;
-            console.log(request.body)
+      let isTimeOut = false;
+      // TODO: Improve timeout logic as it continues executing any async work already schedule in the loop
+      response. setTimeout(tO, () => { 
+        response.sendStatus(408);
+        response.end();
+        isTimeOut = true;
+        return;
+      })
+          
+      response.header("Access-Control-Allow-Origin", "*");        
+      
+      console.log("Models to Call: ", modelsToCall)
+      
+      var originMediaID = request.body.originMediaID;
+      var fileBuffer = request.file.buffer;
+      try {
+        var parsedMediaOut =  await mediaParse(originMediaID, fileBuffer, modelsToCall);
+        if (parsedMediaOut.error) { 
+          response.sendStatus(parsedMediaOut.statusCode);
+          cb(new Error(parsedMediaOut.message), null); 
         }
-        else{
-          modelsToCall=={"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1};
-        }
-
-        console.log(modelsToCall)
-        var parsedMediaOut =  mediaParse(request.file.buffer,modelsToCall, request,response);
-        //console.log(parsedMediaOut);
-        return cb(null, "parsing now!");
+      } catch(error) { 
+        response.sendStatus(500);
+        console.error(error);
       }
       
+      if(!isTimeOut) {
+        response.setHeader('Content-Type', 'application/json');
+        response.status(parsedMediaOut.statusCode);
+        response.send(parsedMediaOut.data);
+        response.removeAllListeners();      
+      } else { 
+        cb(new Error('The request timed out'), null);
+      }
+      // return cb(null, "parsing now!");
     }
-    else{
-      response.send("nothing to do without any signal. which is fine.")
-      return cb(new Error('no signal detected.'), false);
-      
-    }
- 
-
-
-
-
-  var dNow=Date.now();
-  var yMod=13;
-  var d = new Date();
-  var n = d.getHours();
-    
-
-
-  //next();
-  
-
-
-
+        
+  }
+  else {
+    response.send("nothing to do without any signal. which is fine.")
+    return cb(new Error('no signal detected.'), false);
+  }
 });
 
 
