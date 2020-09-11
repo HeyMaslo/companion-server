@@ -1,6 +1,6 @@
 {
   "name": "maslocompanionserver",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "maslo companion server",
   "main": "index.js",
   "dependencies": {},
@@ -10,7 +10,7 @@
   "devDependencies": {},
   "scripts": {
     "start": "node .",
-    "dev": "nodemon -L index.js",
+    "dev": "nodemon --inspect=0.0.0.0 index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maslo and Russell Foltz-Smith",
