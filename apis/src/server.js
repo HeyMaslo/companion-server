@@ -58,7 +58,14 @@ var getEntities = async function (request, response, next) {
 /**
  * GET  /
  */
-app.get('/', (req, res) => res.send('Hey! I am maslo!'));
+app.get('/', (req, res) => res.send('Hey! I am maslo! <br />Go to the <a href="/playground">Playground!</a>'));
+
+/**
+ * GET  /
+ */
+app.get('/playground', (req, res) => {
+  return res.sendFile(path.join(__dirname + '/views/playground.html'));
+});
 
 /**
  * GET  /getJSON

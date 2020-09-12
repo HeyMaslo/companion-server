@@ -1,0 +1,140 @@
+<html>
+
+<head>
+  <title>Demo of Maslo Companion Server</title>
+</head>
+
+<body>
+  <script>
+    function callMasloText() {
+
+      var formdata = new FormData();
+      formdata.append("media", document.getElementById('media2').value);
+      formdata.append("originTextID", document.getElementById('originTextID').value);
+
+      var requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow'
+      };
+
+      // var url = "https://maslocompanionserver.wl.r.appspot.com/analyzeText";
+      var url = "http://localhost:8080/analyzeText"
+
+      fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => updateResults(result))
+        .catch(error => console.log('error', error));
+    }
+
+
+    function callMasloMedia() {
+
+      var formdata = new FormData();
+      formdata.append("media", document.getElementById('media').files[0], "dogtravel.jpg");
+      formdata.append("type", document.getElementById('type').value);
+      formdata.append("originMediaID", document.getElementById('originMediaID').value);
+      formdata.append("modelsToCall", document.getElementById('modelsToCall').value);
+
+      var requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow'
+      };
+
+      // var url = "https://maslocompanionserver.wl.r.appspot.com/analyzeMedia";
+      var url = "http://localhost:8080/analyzeMedia"
+
+      fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => updateResults(result))
+        .catch(error => console.log('error', error));
+    }
+    function updateResults(result) {
+      console.log(JSON.stringify(JSON.parse(result), undefined, 2));
+      document.getElementById("json").innerHTML = JSON.stringify(JSON.parse(result), undefined, 2);
+    }
+  </script>
+  <h1>read docs if you haven't</h1>
+  <div style="float:left; width: 49%">
+    <h2><a href="https://github.com/HeyMaslo/companionserver/">docs about the server and you can get in/out info.</a></h2>
+    <h1><a>Maslo Companion Server, on IMAGES</a></h1>
+    <form id="form" class="appnitro" enctype="multipart/form-data" method="post" action="javascript:callMasloMedia()">
+      <div class="form_description">
+        <p>Test the apis. Simply. But using code / api call in command line is probably best.</p>
+      </div>
+      <ul>
+
+        <li id="li_1">
+          <label class="description" for="element_1">Image </label>
+          <div>
+            <input id="media" name="media" class="element file" type="file" />
+          </div>
+        </li>
+        <li id="li_2">
+          <label class="description" for="element_2">type </label>
+          <div>
+            <input id="type" name="type" class="element text medium" type="text" maxlength="255" value="image" />
+          </div>
+        </li>
+        <li id="li_3">
+          <label class="description" for="element_3">originMediaID </label>
+          <div>
+            <input id="originMediaID" name="originalMediaID" class="element text medium" type="text" maxlength="255" value="324234lkjhkljh234234" />
+          </div>
+        </li>
+        <li id="li_4">
+          <label class="description" for="element_4">modelsToCall </label>
+          <div>
+            <input id="modelsToCall" name="modelsToCall" class="element text medium" type="text" maxlength="255" value='' />
+          </div>
+        </li>
+
+        <li class="buttons">
+
+
+          <input id="saveForm" class="button_text" type="submit" name="submit" value="Submit" />
+        </li>
+      </ul>
+    </form>
+    <p>OR</p>
+
+    <h1><a>Maslo Companion Server, on TEXT</a></h1>
+    <form id="form" class="appnitro" enctype="multipart/form-data" method="post" action="javascript:callMasloText()">
+      <div class="form_description">
+        <p>Test the apis. Simply. But using code / api call in command line is probably best.</p>
+      </div>
+      <ul>
+
+        <li id="li_1">
+          <label class="description" for="element_1">Text or Journal </label>
+          <div>
+            <input id="media2" name="media2" class="element file" type="textbox" />
+          </div>
+        </li>
+        <li id="li_3">
+          <label class="description" for="element_3">originTextID </label>
+          <div>
+            <input id="originTextID" name="originalMediaID" class="element text medium" type="text" maxlength="255" value="324234lkjhkljh234234" />
+          </div>
+        </li>
+
+        <li class="buttons">
+
+
+          <input id="saveForm" class="button_text" type="submit" name="submit" value="Submit" />
+        </li>
+      </ul>
+    </form>
+  </div>
+  <div style="float:right; width: 49%">
+    <h1>Output from Companion Server</h1>
+    <pre id="json"></pre>
+  </div>
+
+  <script>document.getElementById('modelsToCall').value = JSON.stringify({ "imageMeta": 1, "imageSceneOut": 1, "imageObjects": 0, "imageTox": 1, "imagePose": 1, "faces": 0, "photoManipulation": 1 });</script>
+
+</body>
+
+
+</html>
