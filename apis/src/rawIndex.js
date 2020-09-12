@@ -1,7 +1,4 @@
 "use strict";
-
-process.exit();
-
 // Basic libraries for nodejs, express application
 const express = require('express');
 const unirest = require('unirest');

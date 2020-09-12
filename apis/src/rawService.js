@@ -1,7 +1,4 @@
 "use strict";
-
-process.exit();
-
 // Basic libraries for nodejs, express application
 const express = require('express');
 const unirest = require('unirest');
@@ -1318,7 +1315,7 @@ var mediaParse = async function(originMediaID, img, modelsToCall) {
  * POST  /analyzeMedia
  * 
  */
-app.post('/analyzeMedia', upload.single('media'),  async function (request, response, next) {
+module.exports.analyzeMedia = async function (request, response, next) {
 
   //memory review
   console.log("Memory Usage: ", process.memoryUsage());
@@ -1506,7 +1503,7 @@ return true;
 }
 
 //analyzeText Post
-app.post('/analyzeText',upload.single('media'),function (request, response) {
+module.exports.analyzeText = (request, response) => {
   var dNow=Date.now();
   var yMod=13;
   var d = new Date();
@@ -1546,6 +1543,3 @@ app.post('/analyzeText',upload.single('media'),function (request, response) {
 
 });
 
-
-//SET THE APP to LISTEN FOR REQUESTS
-app.listen(port, () => console.log(`Maslo Companion Server at http://localhost:${port}`))
