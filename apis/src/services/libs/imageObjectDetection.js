@@ -3,6 +3,7 @@
 //traditional image processing and other media helpers
 const { Image } = require('image-js');
 const ColorThief = require('color-thief');
+const cocoSsd = require('@tensorflow-models/coco-ssd');
 
 
 // Config
