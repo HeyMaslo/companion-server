@@ -8,18 +8,21 @@ const path = require('path');
 var os = require('os');
 var flatten = require('flat');
 
+var totalFiles = 0, totalSuccess = 0, totalError = 0;
 
 
 (async function main() {
 
-   const ws = fs.createWriteStream('./Bath-results.json');
+   const ws = fs.createWriteStream('./carSelfies.json');
    ws.on('error', function (err) {
       console.error(err);
    });
 
    try {
+      var i = 0;
       const tasks = [];
-      const files = await getFiles('./images/Bathroom Selfie');
+      const files = await getFiles('./images/Car Selfie');
+      totalFiles = files.length;
       files.forEach((f) => tasks.push(async () => processImage(ws, f)));
       await async.parallelLimit(tasks, 1);
    }
@@ -50,7 +53,7 @@ async function getFiles(dir) {
 async function processImage(ws,filePath) {
    console.log( `Processing ${filePath}` );
    try {
-      const endpoint = "http://localhost:8080/analyzeMedia";
+      const endpoint = "http://localhost:41960/analyzeMedia";
       const form = new FormData();
       form.append('media', fs.createReadStream(filePath));
       form.append('originMediaID',filePath);
@@ -61,10 +64,19 @@ async function processImage(ws,filePath) {
 
       const response = await axios.post(endpoint, form, { headers: form.getHeaders() });
       await trackResult(ws, filePath, response);
+      totalSuccess++;
+      console.log('     Success')
       return response;
    }
    catch(e) {
-      console.error(e);
+      totalError++;
+      console.error('     Error');
+   } finally {
+      var processed = totalError + totalSuccess;
+      console.clear();
+      console.log(`Processed ${processed}/${totalFiles}`);
+      console.log(`Total Success: ${totalSuccess}`);
+      console.log(`Total Error: ${totalError}`);
    }
 }
 
