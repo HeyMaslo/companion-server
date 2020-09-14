@@ -65,13 +65,18 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
 
     //blazeface
     // Load the model.
-    const bfmodel = await blazeface.load();
-
-    // Pass in an image or video to the model. The model returns an array of
-    // bounding boxes, probabilities, and landmarks, one for each detected face.
-
-    const returnTensors = false; // Pass in `true` to get tensors back, rather than values.
-    const blazeFacePredictions = await bfmodel.estimateFaces(imgToParse, returnTensors);
+    let blazeFacePredictions;
+    try {
+      let bfmodel = await blazeface.load();
+  
+      // Pass in an image or video to the model. The model returns an array of
+      // bounding boxes, probabilities, and landmarks, one for each detected face.  
+      const returnTensors = false; // Pass in `true` to get tensors back, rather than values.
+      blazeFacePredictions = await bfmodel.estimateFaces(imgToParse, returnTensors);
+      bfmodel = null;
+    } catch (error) { 
+      return parseCallback(new Error(error), null);
+    } 
 
     //deal with summary metrics
     analysisJSON['allFaces'] = blazeFacePredictions;
@@ -109,11 +114,7 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
     //TODO is detect the faces individually in an image and evaluate each face.
     //AutoML Model for Facial Expression Classification
 
-    //load expression model, then use in cropped face.
-    const faceExpressionModel = await automl.loadImageClassification('http://localhost:8080/ferFace/model.json');
-
-    //get the gender model too
-    const genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
+    
 
     var primarySubjectFaceVisible = { visibility: 0 };
     if (blazeFacePredictions[0]) {
@@ -183,11 +184,19 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
 
         //face emotion test
         console.debug('Start of Face Emotion Test')
-        const faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop)
-          .then((res) => Promise.resolve(res))
-          .catch((err) => {
-            console.log('faceExpressionModel classify error', err);
-          })
+    
+        //load expression model, then use in cropped face.
+        let faceExpressionModelpredictions;
+        try { 
+          const faceExpressionModel = await automl.loadImageClassification('http://localhost:8080/ferFace/model.json');
+          faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop)
+            .then((res) => Promise.resolve(res))
+            .catch((err) => {
+              console.log('faceExpressionModel classify error', err);
+            });
+        } catch (error) { 
+          return parseCallback(new Error(error), null);
+        }
         console.debug('End of Face Emotion Test')
 
         //console.log('faceExpressionModel: ');
@@ -199,7 +208,14 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
           var tensor = tf.cast(tf.node.decodeImage(faceCrop.resize({ width: 96, height: 96 }).toBuffer(), 3), 'float32');
           tensor = tensor.div(255.0);
           tensor = tensor.expandDims(0);
-          var genderresult = genderModel.predict(tensor);
+          var genderresult;
+          try {
+            let genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
+            var genderresult = genderModel.predict(tensor);            
+            genderModel = null;
+          } catch (error) {             
+            return parseCallback(new Error(error), null);
+          }
 
           //convert the thresholds to a label.
           const confidences = Array.from(genderresult.dataSync());
@@ -217,11 +233,12 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
     //FACE MESH FOR FINER GRAIN
     try {
       // Load the MediaPipe facemesh model.
-      const facemeshmodel = await facemesh.load({ maxFaces: 3 });
+      let facemeshmodel = await facemesh.load({ maxFaces: 3 });
       // Pass in a video stream (or an image, canvas, or 3D tensor) to obtain an
       // array of detected faces from the MediaPipe graph.
       await tf.setBackend('cpu');
       const predictions = await facemeshmodel.estimateFaces(imgToParse);
+      facemeshmodel = null;
 
       if (predictions.length > 0) {
         /*
@@ -271,7 +288,7 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
       console.log(error)
     }
 
-    return parseCallback(null, analysisJSON);
+    return parseCallback(null, {'faces' : analysisJSON});
   }
   else {
     analysisJSON['error'] = "no image faces parsed.";

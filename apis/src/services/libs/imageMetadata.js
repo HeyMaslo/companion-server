@@ -85,7 +85,7 @@ module.exports = async function imageMetadata(img, parseCallback) {
     compressed = null;
     uncompressed = null;
 
-    return parseCallback(null, analysisJSON);
+    return parseCallback(null, { "imageMeta": analysisJSON});
   }
   else {
     analysisJSON['error'] = "no image information parsed.";

@@ -41,35 +41,41 @@ const mobilenet = require('@tensorflow-models/mobilenet');
 
 //we need to get all the models loaded up on BOOT, not run time.  the models dont change request to request.  (though there is a case to be made to not boot a giant set of things into memory)
 const deeplab = require('@tensorflow-models/deeplab');
+let imageSegmentation;
 
+try {
+  const loadModelDeepLab = async () => {
+    const modelName = 'pascal';   // set to your preferred model, either `pascal`, `cityscapes` or `ade20k`
+    const quantizationBytes = 2;  // either 1, 2 or 4
+    //const url = 'https://tfhub.dev/tensorflow/tfjs-model/deeplab/pascal/1/default/1/model.json?tfjs-format=file';
+    //locally need to get the right model for each of these settings
+    const url = localModelURL + 'tensorflowlocal/deeplab/deeplab_pascal_1_default_1/model.json?tfjs-format=file'
+    //return await deeplab.load({base: modelName, quantizationBytes});
+    return await deeplab.load({ modelUrl: url, base: modelName, quantizationBytes });
+  };
+  
+  //load Deeplab - may wanna remove this
+  //loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
+  
+  imageSegmentation = async (imageParse) => {
+    //console.log(loadModelDeepLab);
+    //x = tf.tensor4d([1, 2, 3, 4],[1,1,1,1])
+    //for now we are just passing back the segments and "colors", but we should pass back the map itself.
+    return await loadModelDeepLab()
+      .then((model) => model.segment(tf.cast(imageParse, "int32")))
+      .then(
+        ({ legend }) =>
+          // console.log(`The predicted classes are ${JSON.stringify(legend)}`);
+          legend
+      ).catch((error) => {
+        console.log(error)
+      }
+    );
+  }
+} catch (error) { 
+  return parseCallback(new Error(error), null);
+} 
 // IMAGE SEGMENTATION this is how we can swap out for LOCAL models, not internet ones.  so download them and bring them in locally
-const loadModelDeepLab = async () => {
-  const modelName = 'pascal';   // set to your preferred model, either `pascal`, `cityscapes` or `ade20k`
-  const quantizationBytes = 2;  // either 1, 2 or 4
-  //const url = 'https://tfhub.dev/tensorflow/tfjs-model/deeplab/pascal/1/default/1/model.json?tfjs-format=file';
-  //locally need to get the right model for each of these settings
-  const url = localModelURL + 'tensorflowlocal/deeplab/deeplab_pascal_1_default_1/model.json?tfjs-format=file'
-  //return await deeplab.load({base: modelName, quantizationBytes});
-  return await deeplab.load({ modelUrl: url, base: modelName, quantizationBytes });
-};
-
-//load Deeplab - may wanna remove this
-//loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
-
-const imageSegmentation = async (imageParse) => {
-  //console.log(loadModelDeepLab);
-  //x = tf.tensor4d([1, 2, 3, 4],[1,1,1,1])
-  //for now we are just passing back the segments and "colors", but we should pass back the map itself.
-  return await loadModelDeepLab()
-    .then((model) => model.segment(tf.cast(imageParse, "int32")))
-    .then(
-      ({ legend }) =>
-        // console.log(`The predicted classes are ${JSON.stringify(legend)}`);
-        legend
-    ).catch((error) => {
-      console.log(error)
-    }
-  );
   /*
     if we want to return the segmentation map
     return await loadModelDeepLab()
@@ -81,8 +87,6 @@ const imageSegmentation = async (imageParse) => {
       );
   */
   //return await loadModelDeepLab.model.segment(imageParse);
-}
-
 
 
 // patch nodejs environment, we need to provide an implementation of
@@ -153,7 +157,7 @@ module.exports = async function imageScene(img, parseCallback) {
     // console.log(predictions);
     analysisJSON['scenes'] = predictions;
 
-    return parseCallback(null, analysisJSON);
+    return parseCallback(null, { 'imageScene': analysisJSON });
   }
   else {
     analysisJSON['error'] = "no image scene parsed.";
