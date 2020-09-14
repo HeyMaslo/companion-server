@@ -10,7 +10,7 @@
   "devDependencies": {},
   "scripts": {
     "start": "node .",
-    "dev": "nodemon --inspect=0.0.0.0 index.js",
+    "dev": "nodemon --inspect=0.0.0.0 src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maslo and Russell Foltz-Smith",
