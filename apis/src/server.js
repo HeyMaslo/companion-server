@@ -1,7 +1,7 @@
 "use strict";
 // Basic libraries for nodejs, express application
 const express = require('express');
-const unirest = require('unirest');
+// const unirest = require('unirest');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 //const fetch = require('node-fetch');
@@ -10,11 +10,13 @@ const path = require('path');
 
 // Config
 const port = 8080 | process.env.PORT;
-const localModelURL = `http://localhost:${port}/`;
+// const localModelURL = `http://localhost:${port}/`;
+
+console.log(':: CPU COUNT: ', require('os').cpus().length);
 
 //const tfG = require('@tensorflow/tfjs-node-gpu');
-require('@tensorflow/tfjs-backend-cpu');
-require('@tensorflow/tfjs-backend-webgl');
+// require('@tensorflow/tfjs-backend-cpu');
+// require('@tensorflow/tfjs-backend-webgl');
 
 
 // Grab functionalities
@@ -24,7 +26,8 @@ const respondWithExampleJSON = require('./services/exampleJSON');
 
 
 //this is where we get the POST form parser set up
-const upload = multer();
+var storage = multer.memoryStorage()
+var upload = multer({ storage: storage })
 
 //set app
 const app = express();
