@@ -151,8 +151,7 @@ https://codelabs.developers.google.com/codelabs/cloud-running-a-nodejs-container
 
 ## Smoke Test
 
-The smoke-test directory includes JavaScript for iterating through a directory of images and writing out the resulting JSON to a local file.  Please open index.js and adjust the paths to your image directory, JSON output file, and any other parameters you'd like to adjust.  Then run from the command line:  
-    node index.js
+The smoke-test directory includes JavaScript for iterating through a directory of images and writing out the resulting JSON to a local file.  Please open index.js and adjust the paths to your image directory, JSON output file, and any other parameters you'd like to adjust.  Then run from the command line: `node index.js`  
 
 ## API
 Head to the docs folder or https://heymaslo.github.io/companionserver/#/ for full documentation on the APIs.
