@@ -2,7 +2,7 @@
 
 ![](https://cdn-images-1.medium.com/max/1600/1*Gm7A7w4vJZeNXKHJQxhq7Q.gif)
 
-version: 1.0.7  
+version: 1.0.8  
 authors: Russel Foltz-Smith, Mark Ziler
 
 ## Overview of the APIs
@@ -19,9 +19,9 @@ Right now the default setting is a 10 second timeout for any response.
 
 There's no file size limit really, but once you get above 20MB image files you get much slower responses, and will need to hit individual facet APIs
 
-## TODOS as of 8/5/2020
+## TODOS as of 9/15/2020
 
-* perform much more rigorous smoke tests
+* improve handling of timeouts to return partial JSON for models which have completed in time  
 
   
 ## AnalyzeMedia  
