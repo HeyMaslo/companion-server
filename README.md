@@ -13,7 +13,7 @@ Maslo Companion Server is a self contained signal processing and machine learnin
 
 With Companion Server, developers are able to pass unstructured signals for the computer to observe. The server then returns insights about human interactions that can be incorporated into enhanced products. *Note: Original server was using lower level code with WolframEngine, python, tensorflow but it has been simplified and smallified for maintenance and portability reasons.*
 
-The companion server can easily be attached to other systems by way to passing in images or text to it.  In response the companion server supplies back out a set of JSON. 
+The companion server can easily be attached to other systems by passing in images or text, and receiving a JSON response. 
 
 ## Use Cases  
 * Observing and understanding context in data
@@ -148,6 +148,11 @@ https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecre
 #### Public Clouds
 * Kubernetes on google cloud
 https://codelabs.developers.google.com/codelabs/cloud-running-a-nodejs-container/index.html?index=..%2F..index
+
+## Smoke Test
+
+The smoke-test directory includes JavaScript for iterating through a directory of images and writing out the resulting JSON to a local file.  Please open index.js and adjust the paths to your image directory, JSON output file, and any other parameters you'd like to adjust.  Then run from the command line:  
+    node index.js
 
 ## API
 Head to the docs folder or https://heymaslo.github.io/companionserver/#/ for full documentation on the APIs.
