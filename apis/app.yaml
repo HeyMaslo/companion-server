@@ -16,7 +16,7 @@ automatic_scaling:
 resources:
   cpu: 4
   memory_gb: 6.0
-  disk_size_gb: 10
+  disk_size_gb: 20
 network:
   forwarded_ports:
   - 80:8080

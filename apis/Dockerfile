@@ -1,2 +1,2 @@
 #for cloud deploy
-FROM un1crom/maslocompanionserver:1.0.6
+FROM heymaslo/maslocompanionserver:1.0.8
