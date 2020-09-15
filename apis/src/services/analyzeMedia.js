@@ -128,89 +128,62 @@ var mediaParse = async function (originMediaID, img, modelsToCall) {
 
   //GET BASIC INFO ABOUT THE IMAGE
   if (callModels.imageMeta) {
-    // promises.push(imageMetadata(img, parseCallback));
-    // var imageMeta = await imageMetadata(img, parseCallback);
-    //console.log(imageMeta);
-    // analysisJSON['imageMeta'] = imageMeta;
-    // imageMeta = null;
+    promises.push(imageMetadata(img, parseCallback));
+
   }
 
   //IMAGE SCENES
   if (callModels.imageSceneOut) {
-    // promises.push(imageScene(imgToParse, parseCallback));
-    // var imageSceneOut = await imageScene(imgToParse, parseCallback);
-    // //console.log(imageSceneOut);
-    // analysisJSON['imageScene'] = imageSceneOut;
-    // imageSceneOut = null;
+    promises.push(imageScene(imgToParse, parseCallback));
+ 
   }
 
   //IMAGE OBJECTS
   if (callModels.imageObjects) {
-    // promises.push(imageObjectDetection(img, parseCallback));
-    // var imageObjects = await imageObjectDetection(img, parseCallback);
-    // //console.log(imageObjects);
-    // analysisJSON['imageObjects'] = imageObjects;
-    // imageObjects = null;
+    promises.push(imageObjectDetection(img, parseCallback));
+
   }
 
   //NSFW and Person Clothed assessment
   if (callModels.imageTox) {
-    // promises.push(imageNSFW(imgToParse, parseCallback));
-    // var imageTox = await imageNSFW(imgToParse, parseCallback);
-    // //console.log(imageTox);
-    // analysisJSON['personsClothed'] = imageTox;
-    // imageTox = null;
+    promises.push(imageNSFW(imgToParse, parseCallback));
+
   }
 
   //poses
   if (callModels.imagePose) {
-    // promises.push(imagePosing(imgToParse, parseCallback));
-    // var imagePose = await imagePosing(imgToParse, parseCallback);
-    // //console.log(imagePose);
-    // analysisJSON['poses'] = imagePose;
-    // imagePose = null;
+    promises.push(imagePosing(imgToParse, parseCallback));
+
   }
 
   //faces and recognition
   if (callModels.faces) {    
-    // promises.push(imageFaceDetection(img, parseCallback));
-    // try {      
-    //   var faces = await imageFaceDetection(img, parseCallback);
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    // //console.log(faces);
-    // analysisJSON['faces'] = faces;
-    // faces = null;
+    promises.push(imageFaceDetection(img, parseCallback));
+
   }
 
   //PHOTO FILTERS and MANIPULATIONS
   //NEED TO FINISH TRAINING ON THIS
-
   //was photo social media filtered?
   if (callModels.photoManipulation) {
-    // promises.push(imageManipulation(imgToParse, parseCallback));
-    // var photoManipulation = await imageManipulation(imgToParse, parseCallback);
-    // //console.log(photoManipulation);
-    // analysisJSON['photoManipulation'] = photoManipulation;
-    // photoManipulation = null;
+    promises.push(imageManipulation(imgToParse, parseCallback));
   }
   
   let result;
-
+  
+  tf.engine().startScope();
   result = await Promise.all(promises).then((results) => {
-    // console.log(results.flat());
-    // NOW PREP THE FINAL RESPONSE
-    //SEND 
     analysisComplete = true;
-    //memory manage a bit
-    //imgToParse.dispose();
+    tf.dispose(imgToParse);
+    tf.disposeVariables(); 
+    tf.dispose(img);  
     imgToParse = null;
     ImageBasics = null;
     return results.reduce((acc,val) => { return Object.assign(acc, val); }, analysisJSON);
   }).catch((error) => {
     parseCallback(new Error(error), null);
   });
+  tf.engine().endScope();
 
   return {
     error: false,
@@ -291,6 +264,7 @@ module.exports = async function analyzeMedia(request, response, next) {
         response.status(parsedMediaOut.statusCode);
         response.send(parsedMediaOut.data);
         response.removeAllListeners();
+        response.end()
       } else {
         cb(new Error('The request timed out'), null);
       }

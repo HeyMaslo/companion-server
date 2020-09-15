@@ -73,6 +73,7 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
       // bounding boxes, probabilities, and landmarks, one for each detected face.  
       const returnTensors = false; // Pass in `true` to get tensors back, rather than values.
       blazeFacePredictions = await bfmodel.estimateFaces(imgToParse, returnTensors);
+      tf.dispose(bfmodel);
       bfmodel = null;
     } catch (error) { 
       return parseCallback(new Error(error), null);
@@ -211,11 +212,12 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
           var genderresult;
           try {
             let genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
-            var genderresult = genderModel.predict(tensor);            
+            var genderresult = genderModel.predict(tensor);   
+            tf.dispose(genderModel);                     
             genderModel = null;
           } catch (error) {             
             return parseCallback(new Error(error), null);
-          }
+          } 
 
           //convert the thresholds to a label.
           const confidences = Array.from(genderresult.dataSync());
@@ -288,6 +290,7 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
       console.log(error)
     }
 
+    tf.dispose(imgToParse);
     return parseCallback(null, {'faces' : analysisJSON});
   }
   else {

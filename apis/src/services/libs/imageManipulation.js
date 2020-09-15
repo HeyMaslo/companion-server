@@ -32,9 +32,10 @@ module.exports = async function imageManipulation(img, parseCallback) {
     try {
       const photoManipulation = await automl.loadImageClassification(`${localModelURL}/socialPhotos/model.json`);
       photoManipulationpredictions = await photoManipulation.classify(img);      
+      tf.dispose(photoManipulation);
     } catch (error) { 
       return parseCallback(new Error(error), null);
-    } 
+    }
 
     analysisJSON['manipulations'] = photoManipulationpredictions;
 
