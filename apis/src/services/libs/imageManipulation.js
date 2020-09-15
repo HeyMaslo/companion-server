@@ -28,12 +28,18 @@ module.exports = async function imageManipulation(img, parseCallback) {
   var analysisJSON = {};
   if (typeof (img) == "object") {
     //load expression model, then use in cropped face.
-    const photoManipulation = await automl.loadImageClassification(`${localModelURL}/socialPhotos/model.json`);
-    const photoManipulationpredictions = await photoManipulation.classify(img);
+    let photoManipulationpredictions
+    try {
+      const photoManipulation = await automl.loadImageClassification(`${localModelURL}/socialPhotos/model.json`);
+      photoManipulationpredictions = await photoManipulation.classify(img);      
+      tf.dispose(photoManipulation);
+    } catch (error) { 
+      return parseCallback(new Error(error), null);
+    }
 
     analysisJSON['manipulations'] = photoManipulationpredictions;
 
-    return parseCallback(null, analysisJSON);
+    return parseCallback(null, { 'photoManipulation' : analysisJSON});
   } else {
     analysisJSON['error'] = "no image scene parsed.";
     return parseCallback(new Error("image object not supplied to function."), analysisJSON);

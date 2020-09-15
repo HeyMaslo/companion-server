@@ -13,7 +13,7 @@ const localModelURL = `http://localhost:${port}/`;
 
 // Tensorflow kernels and libraries
 //const tfN = require('@tensorflow/tfjs');
-const tf = require('@tensorflow/tfjs-node');
+// const tf = require('@tensorflow/tfjs-node');
 //const tfG = require('@tensorflow/tfjs-node-gpu');
 require('@tensorflow/tfjs-backend-cpu');
 require('@tensorflow/tfjs-backend-webgl');
@@ -25,18 +25,23 @@ module.exports = async function imageObjectDetection(img, parseCallback) {
   var analysisJSON = {};
   if (typeof (img) == "object") {
 
-    const imgToParse = tf.node.decodeImage(img, 3);
+    const imgToParse = require('@tensorflow/tfjs-node').node.decodeImage(img, 3);
     // const imgToParse4D = tf.node.decodeImage(img,3);
 
     //CONVERT IMAGE to image object for image-js... useful for many things
     let imageBasics = await Image.load(img);
     //Object Detection
 
-    // Load the model. LOCALLY
-    const modelObjects = await cocoSsd.load({ base: "mobilenet_v2", modelUrl: localModelURL + 'tensorflowlocal/ssd_mobilenet_v2_1_default_1/model.json?tfjs-format=file' });
+    let predictionsObjects;
+    try { 
+      const modelObjects = await cocoSsd.load({ base: "mobilenet_v2", modelUrl: localModelURL + 'tensorflowlocal/ssd_mobilenet_v2_1_default_1/model.json?tfjs-format=file' });
+  
+      // Classify the image.
+      predictionsObjects = await modelObjects.detect(imgToParse);
+    } catch (error) { 
+      return parseCallback(new Error(error), null);
+    } 
 
-    // Classify the image.
-    const predictionsObjects = await modelObjects.detect(imgToParse);
 
     //console.log('Image Object Predictions: ');
     //console.log(predictionsObjects);
@@ -113,7 +118,7 @@ module.exports = async function imageObjectDetection(img, parseCallback) {
     imgToParse.dispose();
     imageBasics = null;
 
-    return parseCallback(null, analysisJSON);
+    return parseCallback(null, { 'imageObjects': analysisJSON } );
 
   }
   else {

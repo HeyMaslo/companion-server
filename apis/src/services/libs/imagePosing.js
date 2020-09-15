@@ -51,22 +51,26 @@ module.exports = async function imagePosing(imgToParse, parseCallback) {
      tensorflowlocal/imagenet_mobilenet_v1_075_224_classification_1_default_1/model.json
     */
 
+    let predictionPose;
     //THIS IS VERY FRAGILE.  posenet moves rather quickly, it seems, so this may need to be refactored with more ironclad approaches.... the model is so specific.
-    const net = await posenet.load({
-      architecture: 'MobileNetV1',
-      outputStride: 16,
-      inputResolution: 257,
-      multiplier: 0.75,
-      //modelUrl: "https://storage.googleapis.com/tfjs-models/savedmodel/posenet/mobilenet/float/075/model-stride16.json"
-      modelUrl: localModelURL + 'tensorflowlocal/posenet/model-stride16.json'
-    });
-
-    // const net = await posenet.load({modelUrl:localModelURL+'mobilenet/model.json'});
-    // const net = await posenet.load();
-
-    const predictionPose = await net.estimateSinglePose(imgToParse, {
-      flipHorizontal: false
-    });
+    try {
+      const net = await posenet.load({
+        architecture: 'MobileNetV1',
+        outputStride: 16,
+        inputResolution: 257,
+        multiplier: 0.75,
+        //modelUrl: "https://storage.googleapis.com/tfjs-models/savedmodel/posenet/mobilenet/float/075/model-stride16.json"
+        modelUrl: localModelURL + 'tensorflowlocal/posenet/model-stride16.json'
+      });
+  
+      // const net = await posenet.load({modelUrl:localModelURL+'mobilenet/model.json'});
+      // const net = await posenet.load();  
+      predictionPose = await net.estimateSinglePose(imgToParse, {
+        flipHorizontal: false
+      });
+    } catch (error) { 
+      return parseCallback(new Error(error), null);
+    } 
 
     // console.log('PosePredictions: ');
     // console.log(predictionPose);
@@ -98,7 +102,7 @@ module.exports = async function imagePosing(imgToParse, parseCallback) {
     analysisJSON['pose'] = poseLabel;
     analysisJSON['poseLandmarks'] = predictionPose;
 
-    return parseCallback(null, analysisJSON);
+    return parseCallback(null, { 'poses' :  analysisJSON });
 
   } else {
     analysisJSON['error'] = "no NSFW content parsed.";

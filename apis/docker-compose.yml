@@ -9,3 +9,8 @@ services:
             - .:/usr/src/app
         working_dir: /usr/src/app
         command: bash -c "npm install && npm run dev"
+        deploy:
+            resources:
+                limits:
+                    memory: 2gb
+

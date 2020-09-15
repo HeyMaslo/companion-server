@@ -10,6 +10,7 @@ const { Image } = require('image-js');
 
 // Tensorflow kernels and libraries
 const tf = require('@tensorflow/tfjs-node');
+require('@tensorflow/tfjs-node');
 require('@tensorflow/tfjs-backend-cpu');
 require('@tensorflow/tfjs-backend-webgl');
 
@@ -90,12 +91,16 @@ var mediaParse = async function (originMediaID, img, modelsToCall) {
       let imgB = await Image.load(img);
       ImageBasics = imgB.resize({ factor: .3 });
       imgB = null;
+      console.log(':: BEFORRE DECODE IMAGE:: ',process.memoryUsage());
       imgToParse = tf.node.decodeImage(ImageBasics.toBuffer("jpg"), 3);
+      console.log(':: AFTER DECODE IMAGE:: ',process.memoryUsage());
       console.log("Image Size: ", ImageBasics.size);
     }
     else {
       await tf.setBackend('tensorflow');
+      console.log(':: BEFORRE DECODE IMAGE:: ',process.memoryUsage());
       imgToParse = tf.node.decodeImage(img, 3);
+      console.log(':: AFTER DECODE IMAGE:: ',process.memoryUsage());
       ImageBasics = await Image.load(img);
     }
   } catch (error) {
@@ -118,83 +123,73 @@ var mediaParse = async function (originMediaID, img, modelsToCall) {
   // console.log("Models to call: ", modelsToCall);
 
   let callModels = JSON.parse(modelsToCall);
+  
+  let promises = []
 
   //GET BASIC INFO ABOUT THE IMAGE
   if (callModels.imageMeta) {
-    var imageMeta = await imageMetadata(img, parseCallback);
-    //console.log(imageMeta);
-    analysisJSON['imageMeta'] = imageMeta;
-    imageMeta = null;
+    promises.push(imageMetadata(img, parseCallback));
+
   }
 
   //IMAGE SCENES
   if (callModels.imageSceneOut) {
-    var imageSceneOut = await imageScene(imgToParse, parseCallback);
-    //console.log(imageSceneOut);
-    analysisJSON['imageScene'] = imageSceneOut;
-    imageSceneOut = null;
+    promises.push(imageScene(imgToParse, parseCallback));
+ 
   }
 
   //IMAGE OBJECTS
   if (callModels.imageObjects) {
-    var imageObjects = await imageObjectDetection(img, parseCallback);
-    //console.log(imageObjects);
-    analysisJSON['imageObjects'] = imageObjects;
-    imageObjects = null;
+    promises.push(imageObjectDetection(img, parseCallback));
+
   }
 
   //NSFW and Person Clothed assessment
   if (callModels.imageTox) {
-    var imageTox = await imageNSFW(imgToParse, parseCallback);
-    //console.log(imageTox);
-    analysisJSON['personsClothed'] = imageTox;
-    imageTox = null;
+    promises.push(imageNSFW(imgToParse, parseCallback));
+
   }
 
   //poses
   if (callModels.imagePose) {
-    var imagePose = await imagePosing(imgToParse, parseCallback);
-    //console.log(imagePose);
-    analysisJSON['poses'] = imagePose;
-    imagePose = null;
+    promises.push(imagePosing(imgToParse, parseCallback));
+
   }
 
   //faces and recognition
-  if (callModels.faces) {
-    try {
-      var faces = await imageFaceDetection(img, parseCallback);
-    } catch (error) {
-      console.error(error);
-    }
-    //console.log(faces);
-    analysisJSON['faces'] = faces;
-    faces = null;
+  if (callModels.faces) {    
+    promises.push(imageFaceDetection(img, parseCallback));
+
   }
 
   //PHOTO FILTERS and MANIPULATIONS
   //NEED TO FINISH TRAINING ON THIS
-
   //was photo social media filtered?
   if (callModels.photoManipulation) {
-    var photoManipulation = await imageManipulation(imgToParse, parseCallback);
-    //console.log(photoManipulation);
-    analysisJSON['photoManipulation'] = photoManipulation;
-    photoManipulation = null;
+    promises.push(imageManipulation(imgToParse, parseCallback));
   }
-
-  // NOW PREP THE FINAL RESPONSE
-  //SEND 
-  analysisComplete = true;
-  //memory manage a bit
-  //imgToParse.dispose();
-  imgToParse = null;
-  ImageBasics = null;
+  
+  let result;
+  
+  tf.engine().startScope();
+  result = await Promise.all(promises).then((results) => {
+    analysisComplete = true;
+    tf.dispose(imgToParse);
+    tf.disposeVariables(); 
+    tf.dispose(img);  
+    imgToParse = null;
+    ImageBasics = null;
+    return results.reduce((acc,val) => { return Object.assign(acc, val); }, analysisJSON);
+  }).catch((error) => {
+    parseCallback(new Error(error), null);
+  });
+  tf.engine().endScope();
 
   return {
     error: false,
     message: '',
     statusCode: 200,
-    data: analysisJSON
+    data: result
   }
 };
 
@@ -250,10 +245,12 @@ module.exports = async function analyzeMedia(request, response, next) {
       response.header("Access-Control-Allow-Origin", "*");
 
       // console.log("Models to Call: ", modelsToCall)
-      var originMediaID = request.body.originMediaID;
-      var fileBuffer = request.file.buffer;
       try {
+        var originMediaID = request.body.originMediaID;
+        var fileBuffer = request.file.buffer;
         var parsedMediaOut = await mediaParse(originMediaID, fileBuffer, modelsToCall);
+        fileBuffer = null;  
+        request.file.buffer = null;
         if (parsedMediaOut.error) {
           response.sendStatus(parsedMediaOut.statusCode);
           cb(new Error(parsedMediaOut.message), null);
@@ -267,6 +264,7 @@ module.exports = async function analyzeMedia(request, response, next) {
         response.status(parsedMediaOut.statusCode);
         response.send(parsedMediaOut.data);
         response.removeAllListeners();
+        response.end()
       } else {
         cb(new Error('The request timed out'), null);
       }
