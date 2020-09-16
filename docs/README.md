@@ -33,10 +33,11 @@ API endpoint: /analyzeMedia  POST
 ### Request:  
 | Field Name | Required? | Description | Example | Notes |
 | ---------- | --------- | ----------- | ------- | ----- |
-| media | Required | Raw binary of file to be uploaded.  Can include multiple, each to be analyzed individually. |  | max size = 30MB/file, max 50 files per payload.  Limited to image files currently |
-| type | required | Type of media, as a backstop for mimetype detection problems.  values: image, video, audio. | "image" |  |
-| originMediaID |  | originMediaID to be passed back in response. (GUID) | 062fea4d-efdd-4a7f-92b1-4039503efd5b | GUID or INT |
-| timeOut |  | time in milliseconds to let models run | 100000 | INT |
+| media | Yes | Raw binary of file to be uploaded.  Can include multiple, each to be analyzed individually. | Any image file | Max size: `30MB/file`.<br>  Limited to image files currently in format `jpeg, jpg, png, gif`. |
+| type | Yes | Type of media, as a backstop for mimetype detection problems.  values: image, video, audio. |  `"image/jpeg"` |  |
+| originMediaID | No | originMediaID to be passed back in response. (guid) | `062fea4d-efdd-4a7f-92b1-4039503efd5b` | `guid` or `int` |
+| modelsToCall | No | the models you want to call on your image(s) | `{"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}` | Available models: `imageMeta`, `imageSceneOut`, `imageObjects`, `imageTox`, `imagePose`, `faces`, `photoManipulation`.<br><br> If not included, all models will be on by default |
+| timeOut | No | time in milliseconds to let models run | `100000` | `int` |
 
 **Sample cURL Post:**  
 ```javascript
@@ -331,31 +332,31 @@ curl --location --request POST 'localhost:8080/analyzeText' \
 #### The "Summarized" JSON
 | Field Name | Required? | Description | Example | Notes |
 | ---------- | --------- | ----------- | ------- | ----- |
-| originMediaID | Required | Echo back originMediaID that was passed in | 062fea4d-efdd-4a7f-92b1-4039503efd5b |  |
-| mediaID | Required | Will be an auto-generated fingerprinted/hash GUID of media analyzed. | 062fea4d-efdd-4a7f-92b1-4039503efd5b |  |
-| scenes |  | Scene contexts returned as tags with salience values | "travel photo", "outside" |  |
-| timeOfDay |  | Tag for general daypart: night, evening, afternoon, midday, morning | "morning" |  |
-| emotionTags |  |  Emotion label(s) returned as tags with salience values | "sad", "happy", "laughing" | Suppress responses with personsCount > 2.  For future tuning, we can suppress responses with salience < threshold. |
-| sentiment |  | Floating point from -1 to 1, where -1 is negative. | 0.6 |  |
-| facialExpressions |  | Emotion label(s) returned as tags with salience values | "smiling", "frowning", "anger", "surprise" | Suppress responses with personsCount > 2.  For future tuning, we can suppress responses with salience < threshold. |
-| faceCount |  | How many human faces are in the photo? | 4 | May differ from personsCount (e.g. faces on t-shirts) |
-| personsCount |  | How many human bodies are in the photo? | 4 |  |
-| personsClothed |  | 0-1 float, 1 being most clothed | 0.8 | Partner can bucket these based on observations during testing.  May require tuning to accout for gender and skintone bias |
-| mediaImageResolution |  | height and width | {"height":1000,"width":1000} |  |
-| mediaFileSize |  | In MB | 2.1 |  |
-| mediaDominantColors |  | Nested list of HTML Color values, include % of area | {"color": "#FFFFFF","area": 0.35}, {"color": "#EEEEEE","area": 0.12 } |  |
-| mediaCompressionSize |  | in MB | 1.8 |  |
-| mediaVisualFocus |  | Possible values: blurry, out_of_focus, depth_focus_issues, noise/grain | "blurry" |  |
-| mediaEstimatedCreationDate |  | YYYY estimate | 2018 |  |
-| mediaInterestingness |  | 0-1 float, 1 being most interesting | 0.3 |  |
-| primarySubjectFaceVisible |  |  % visible overall, with bounding box (xy, height/width) | {"visibility": 0.6, "boundingX": 225, "boundingY": 52, "boundingHeight": 375, "boundingWidth": 280} | Suppress responses where personsCount > 2 |
-| secondarySubjectFaceVisible |  |  % visible overall, with bounding box (xy, height/width) | {"visibility": 0.6, "boundingX": 225, "boundingY": 52, "boundingHeight": 375, "boundingWidth": 280} | Suppress responses where personsCount > 2 |
-| isAnimal |  | Animal type, salience | {"tag": "dog","salience": 0.89},{"tag": "tiger","salience": 0.25} | Suppress responses for animals > 2 |
-| primarySubjectGender |  | Only for personsCount = 1 | "female" |  |
-| pose |  | Tags for different poses and numeric tilt | {"tag": "selfie","tilt": 15} |  |"
-| composition |  | Tags describing composition in general categories | "rule of thirds"} |  |
-| photoManipulation |  | 0-1 float, 1 being highest manipulation | 0.7 | Examples: artificial backgrounds, retouching, compositing, etc. |
-| photoFilter |  |  Tags identifying common social media/artificial filters, with salience values | {"tag": "instagram","salience": 0.98} |  |
+| originMediaID | Required | Echo back originMediaID that was passed in | `062fea4d-efdd-4a7f-92b1-4039503efd5b` |  |
+| mediaID | Required | Will be an auto-generated fingerprinted/hash GUID of media analyzed. | `062fea4d-efdd-4a7f-92b1-4039503efd5b` |  |
+| scenes |  | Scene contexts returned as tags with salience values | `"travel photo", "outside"` |  |
+| timeOfDay |  | Tag for general daypart: night, evening, afternoon, midday, morning | `"morning"` |  |
+| emotionTags |  |  Emotion label(s) returned as tags with salience values | `"sad", "happy", "laughing"` | Suppress responses with personsCount > 2.  For future tuning, we can suppress responses with salience < threshold. |
+| sentiment |  | Floating point from -1 to 1, where -1 is negative. | `0.6` |  |
+| facialExpressions |  | Emotion label(s) returned as tags with salience values | `"smiling", "frowning", "anger", "surprise"` | Suppress responses with personsCount > 2.  For future tuning, we can suppress responses with salience < threshold. |
+| faceCount |  | How many human faces are in the photo? | `4` | May differ from personsCount (e.g. faces on t-shirts) |
+| personsCount |  | How many human bodies are in the photo? | `4` |  |
+| personsClothed |  | 0-1 float, 1 being most clothed |` 0.8` | Partner can bucket these based on observations during testing.  May require tuning to accout for gender and skintone bias |
+| mediaImageResolution |  | height and width | `{"height":1000,"width":1000}` |  |
+| mediaFileSize |  | In MB | `2.1` |  |
+| mediaDominantColors |  | Nested list of HTML Color values, include % of area | `{"color": "#FFFFFF","area": 0.35}, {"color": "#EEEEEE","area": 0.12 }` |  |
+| mediaCompressionSize |  | in MB | `1.8` |  |
+| mediaVisualFocus |  | Possible values: blurry, out_of_focus, depth_focus_issues, noise/grain | `"blurry"` |  |
+| mediaEstimatedCreationDate |  | YYYY estimate | `2018` |  |
+| mediaInterestingness |  | 0-1 float, 1 being most interesting | `0.3` |  |
+| primarySubjectFaceVisible |  |  % visible overall, with bounding box (xy, height/width) | `{"visibility": 0.6, "boundingX": 225, "boundingY": 52, "boundingHeight": 375, "boundingWidth": 280}` | Suppress responses where personsCount > 2 |
+| secondarySubjectFaceVisible |  |  % visible overall, with bounding box (xy, height/width) | `{"visibility": 0.6, "boundingX": 225, "boundingY": 52, "boundingHeight": 375, "boundingWidth": 280}` | Suppress responses where personsCount > 2 |
+| isAnimal |  | Animal type, salience | `{"tag": "dog","salience": 0.89},{"tag": "tiger","salience": 0.25}` | Suppress responses for animals > 2 |
+| primarySubjectGender |  | Only for personsCount = 1 | `"female"` |  |
+| pose |  | Tags for different poses and numeric tilt | `{"tag": "selfie","tilt": 15}` |  |"
+| composition |  | Tags describing composition in general categories | `{"rule of thirds"}` |  |
+| photoManipulation |  | 0-1 float, 1 being highest manipulation | `0.7` | Examples: artificial backgrounds, retouching, compositing, etc. |
+| photoFilter |  |  Tags identifying common social media/artificial filters, with salience values | `{"tag": "instagram","salience": 0.98}` |  |
 
 ### Errors:  
 (will be included in response object, if desired.)  
@@ -502,8 +503,8 @@ API endpoint: /analyzeText  POST
 | Field Name | Required? | Description | Example | Notes |
 | ---------- | --------- | ----------- | ------- | ----- |
 | text | required | Raw text to be analyzed |  |  |
-| type | required | Type of text--might be used later to perform different ML pipes.  Values can be [profile field name], text_message | "profile text" |  |
-| originTextID | required | TextID for passback with response | 123213432 | GUID or INT|
+| type | required | Type of text--might be used later to perform different ML pipes.  Values can be [profile field name], text_message | `"profile text"` |  |
+| originTextID | required | TextID for passback with response | `123213432` | `guid` or `int`|
 
 **Sample Requests to API**  
 
@@ -660,16 +661,16 @@ request(options, function (error, response) {
 ### Summary Response:  
 | Field Name | Required? | Description | Example | Notes |
 | ---------- | --------- | ----------- | ------- | ----- |
-| originTextID | Required | Echo back originTextID that was passed in | 123213432 |  |
-| writingLevel |  | score from 0-100 as a measure of overall writing sophistication. 100 being top 1% of writers | 78 |  |
-| ageLevel |  | 0-25 (years) assessed age level of author (not age detection, but just expected writing level by a given age) | 18 |  |
-| educationGradeLevel |  | 0-15, grade level, where 12 is senior year of high school | 11 |  |
-| vocabularyComplexity |  | 0-1, where 1 would be total noise, and 0 would be no words or repeating., a "good" level is between .6 and .7 | 0.6 |  |
-| sentimentScore |  | -1 to 1, where -1 is very negative and 1 is very positive, 0 is neutral | -0.25 |  |
-| emotionalChargedLanguage |  | 0 or 1, assessment if language is highly emotiational | 1 |  |
-| genderCodedLanguage |  | male, female, somewhat male, somewhat female, gender neutral | "somewhat female" |  |
-| nsfwLanguage |  | 0 or 1, it is 1 if text contains Not Safe For Work phrasing and slang  | 1 |  |
-| emotionalTone |  | Tag describing emotional tone of text | "sad" |  |
+| originTextID | Required | Echo back originTextID that was passed in | `123213432` |  |
+| writingLevel |  | score from 0-100 as a measure of overall writing sophistication. 100 being top 1% of writers | `78` |  |
+| ageLevel |  | 0-25 (years) assessed age level of author (not age detection, but just expected writing level by a given age) | `18` |  |
+| educationGradeLevel |  | 0-15, grade level, where 12 is senior year of high school | `11` |  |
+| vocabularyComplexity |  | 0-1, where 1 would be total noise, and 0 would be no words or repeating., a "good" level is between .6 and .7 | `0.6 `|  |
+| sentimentScore |  | -1 to 1, where -1 is very negative and 1 is very positive, 0 is neutral | `-0.25` |  |
+| emotionalChargedLanguage |  | 0 or 1, assessment if language is highly emotiational | `1` |  |
+| genderCodedLanguage |  | male, female, somewhat male, somewhat female, gender neutral |` "somewhat female" `|  |
+| nsfwLanguage |  | 0 or 1, it is 1 if text contains Not Safe For Work phrasing and slang  | `1` |  |
+| emotionalTone |  | Tag describing emotional tone of text | `"sad"` |  |
 
 **Sample JSON:**  
 ```javascript
