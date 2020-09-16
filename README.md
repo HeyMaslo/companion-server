@@ -35,6 +35,10 @@ Make sure you are using the right port (you can change it on the `docker-compose
 
 ### Containers and Installations
 
+#### Official Maslo Builds
+
+https://hub.docker.com/r/heymaslo/maslocompanionserver/tags
+
 Simple info on packaging up docker and node. *See here for basic concepts: https://nodejs.org/en/docs/guides/nodejs-docker-webapp/*
 
 #### Important notes
@@ -50,7 +54,7 @@ Basic image build of app/models:
 
 Tag build for dockerhub push:
 
-    docker tag [yourdockerhub]/maslocompanionserver:latest un1crom/maslocompanionserver:[tag.release.minorreleasenumber]
+    docker tag [yourdockerhub]/maslocompanionserver:latest [yourdockerhub]/maslocompanionserver:[tag.release.minorreleasenumber]
 
 Push to docker hub
 
