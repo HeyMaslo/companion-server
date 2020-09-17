@@ -1,3 +1,4 @@
 media[] = POST BLOB
 type[] = image/jpg
+modelsToCall[] = ["imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1]
 originMediaID[] = 062fea4d-efdd-4a7f-92b1-4039503efd5b
