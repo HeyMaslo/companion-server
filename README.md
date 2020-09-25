@@ -6,6 +6,7 @@ authors: Russell Foltz-Smith @un1crom, Mark Ziler
 
 ![GitHub stars](https://img.shields.io/github/stars/heymaslo/companionserver?style=social)
 [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/)
+![Twitter Follow](https://img.shields.io/twitter/follow/heymaslo?style=social)
 
   
 ## Overview
