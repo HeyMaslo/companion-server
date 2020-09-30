@@ -21,7 +21,8 @@ console.log(':: CPU COUNT: ', require('os').cpus().length);
 
 // Grab functionalities
 const analyzeMedia = require('./services/analyzeMedia');
-const analyzeText = require('./services/analyzeText');
+const { analyzeText } = require('./services/analyzeText');
+const analyzeAudio = require('./services/analyzeAudio');
 const respondWithExampleJSON = require('./services/exampleJSON');
 
 
@@ -64,7 +65,7 @@ var getEntities = async function (request, response, next) {
 app.get('/', (req, res) => res.send('Hey! I am maslo! <br />Go to the <a href="/playground">Playground!</a>'));
 
 /**
- * GET  /
+ * GET  /playground
  */
 app.get('/playground', (req, res) => {
   return res.sendFile(path.join(__dirname + '/views/playground.html'));
@@ -89,6 +90,13 @@ app.post('/analyzeMedia', upload.single('media'), async function (req, res, next
  */
 app.post('/analyzeText', upload.single('media'), (req, res) => {
   return analyzeText(req, res);
+});
+
+/**
+ * POST /analyzeAudio
+ */
+app.post('/analyzeAudio', upload.single('audio'), (req, res) => {
+  return analyzeAudio(req, res);
 });
 
 //SET THE APP to LISTEN FOR REQUESTS
