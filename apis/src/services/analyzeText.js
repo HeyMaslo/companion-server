@@ -9,13 +9,13 @@ const Sentiment = require('sentiment');
 //PARSE AND ANALYZE THE Text
 //This isn't yet that interesting to require seperate functions.
 
-var textParse = async function (textInput, request, response) {
+const textParse = async function (textInput, request, response) {
 
   //GET the text
-  var sentences = textInput;
+  const sentences = textInput;
 
   //set the output object up
-  var textJSON = {};
+  const textJSON = {};
 
   //RESPOND BACK WITH ORIGINAL MEDIA ID
   textJSON['originTextID'] = request.body.originTextID;
@@ -23,7 +23,7 @@ var textParse = async function (textInput, request, response) {
 
   //set a time out here for the response so we limit bad requests
   response.locals.analysisComplete = false;
-  var tO = 100000;
+  let tO = 100000;
   if (request.body.timeOut != null && request.body.timeOut != "") {
 
     tO = parseInt(request.body.timeOut, 10);
@@ -51,7 +51,7 @@ var textParse = async function (textInput, request, response) {
   // labels to include.
 
   textJSON['nsfwLanguage'] = [];
-  var toxMod = await toxicity.load(threshold);
+  const toxMod = await toxicity.load(threshold);
   textJSON['nsfwLanguage'] = await toxMod.classify(sentences).then(predictions => {
     // `predictions` is an array of objects, one for each prediction head,
     // that contains the raw probabilities for each input along with the
@@ -85,12 +85,12 @@ var textParse = async function (textInput, request, response) {
   console.log(textJSON['nsfwLanguage'])
 
   //readability
-  var readability = readabilityScores(sentences);
+  const readability = readabilityScores(sentences);
   textJSON['readability'] = readability;
 
   //sentiment
-  var sentiment = new Sentiment();
-  var sentimentOut = sentiment.analyze(sentences);
+  const sentiment = new Sentiment();
+  const sentimentOut = sentiment.analyze(sentences);
   console.log(sentimentOut);    // Score: -2, Comparative: -0.666
   textJSON['sentimentScore'] = sentimentOut;
 
@@ -112,19 +112,19 @@ var textParse = async function (textInput, request, response) {
 }
 
 //analyzeText Post
-module.exports = function (request, response) {
+function analyzeText(request, response) {
   var dNow = Date.now();
   var yMod = 13;
   var d = new Date();
   var n = d.getHours();
-
-
+  
+  
   var textParsed = textParse(request.body.media, request, response);
   console.log(request.body);
-
-
-
-
+  
+  
+  
+  
   var outJSON =
   {
     "originTextID": "123213432",
@@ -147,8 +147,13 @@ module.exports = function (request, response) {
   }
   //response.setHeader('Content-Type', 'application/json');
   // response.json(outJSON);
-
-
-
+  
+  
+  
 }
 
+
+module.exports = {
+  analyzeText,
+  textParse
+}
