@@ -17,6 +17,10 @@
   "license": "MIT License",
   "bundledDependencies": [
     "@google-cloud/language",
+    "@google-cloud/speech",
+    "ffmpeg-static",
+    "fluent-ffmpeg",
+    "linear16",
     "@teachablemachine/image",
     "@tensorflow/tfjs",
     "@tensorflow/tfjs-automl",
