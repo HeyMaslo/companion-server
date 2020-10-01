@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 // Basic libraries for nodejs, express application
 const express = require('express');
@@ -1392,7 +1393,7 @@ module.exports.analyzeMedia = async function (request, response, next) {
     response.send("nothing to do without any signal. which is fine.")
     return cb(new Error('no signal detected.'), false);
   }
-});
+}
 
 
 
@@ -1538,8 +1539,4 @@ module.exports.analyzeText = (request, response) => {
     }
     //response.setHeader('Content-Type', 'application/json');
  // response.json(outJSON);
-
-
-
-});
-
+};
