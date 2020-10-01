@@ -1,82 +1,70 @@
-"use strict";
 // Basic libraries for nodejs, express application
-const multer = require('multer');
-//const fetch = require('node-fetch');
-global.fetch = require("node-fetch");
-const path = require('path');
+// const fetch = require('node-fetch');
+global.fetch = require('node-fetch');
 
-//traditional image processing and other media helpers
+// traditional image processing and other media helpers
 const { Image } = require('image-js');
 
 // Config
-const port = 8080 | process.env.PORT;
+const port = 8080 || process.env.PORT;
 const localModelURL = `http://localhost:${port}/`;
 
-//TENSORFLOW JS makes it easy to do cheap things with small things
+// TENSORFLOW JS makes it easy to do cheap things with small things
 // https://www.npmjs.com/package/@tensorflow/tfjs-node
 // get almost any kind of model you want here: https://tfhub.dev/
 // the harder work, of course, is in the choices of integration and synthesis.
 
-
 // Tensorflow kernels and libraries
-//const tfN = require('@tensorflow/tfjs');
+// const tfN = require('@tensorflow/tfjs');
 const tf = require('@tensorflow/tfjs-node');
-//const tfG = require('@tensorflow/tfjs-node-gpu');
+// const tfG = require('@tensorflow/tfjs-node-gpu');
 require('@tensorflow/tfjs-backend-cpu');
 require('@tensorflow/tfjs-backend-webgl');
-const { image } = require('@tensorflow/tfjs-node');
-const automl = require("@tensorflow/tfjs-automl");
-const tfconv = require('@tensorflow/tfjs-converter');
+const automl = require('@tensorflow/tfjs-automl');
 
-//non-Tensorflow ML libraries
-const tmImage = require('@teachablemachine/image');
-//const onnxjs = require('onnxjs');
-//require("onnxjs-node");
+// non-Tensorflow ML libraries
+// const onnxjs = require('onnxjs');
+// require("onnxjs-node");
 //
 
 // Tensflow trained models.
-//NOTE THAT SOME OF THESE ACCESS THE INTERNET BY DEFAULT.  Change that.
+// NOTE THAT SOME OF THESE ACCESS THE INTERNET BY DEFAULT.  Change that.
 const mobilenet = require('@tensorflow-models/mobilenet');
 
-
-//we need to get all the models loaded up on BOOT, not run time.  the models dont change request to request.  (though there is a case to be made to not boot a giant set of things into memory)
+// we need to get all the models loaded up on BOOT, not run time.
+// the models dont change request to request.
+//  (though there is a case to be made to not boot a giant set of things into memory)
 const deeplab = require('@tensorflow-models/deeplab');
-let imageSegmentation;
 
-try {
-  const loadModelDeepLab = async () => {
-    const modelName = 'pascal';   // set to your preferred model, either `pascal`, `cityscapes` or `ade20k`
-    const quantizationBytes = 2;  // either 1, 2 or 4
-    //const url = 'https://tfhub.dev/tensorflow/tfjs-model/deeplab/pascal/1/default/1/model.json?tfjs-format=file';
-    //locally need to get the right model for each of these settings
-    const url = localModelURL + 'tensorflowlocal/deeplab/deeplab_pascal_1_default_1/model.json?tfjs-format=file'
-    //return await deeplab.load({base: modelName, quantizationBytes});
-    return await deeplab.load({ modelUrl: url, base: modelName, quantizationBytes });
-  };
-  
-  //load Deeplab - may wanna remove this
-  //loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
-  
-  imageSegmentation = async (imageParse) => {
-    //console.log(loadModelDeepLab);
-    //x = tf.tensor4d([1, 2, 3, 4],[1,1,1,1])
-    //for now we are just passing back the segments and "colors", but we should pass back the map itself.
-    return await loadModelDeepLab()
-      .then((model) => model.segment(tf.cast(imageParse, "int32")))
-      .then(
-        ({ legend }) =>
-          // console.log(`The predicted classes are ${JSON.stringify(legend)}`);
-          legend
-      ).catch((error) => {
-        console.log(error)
-      }
-    );
-  }
-} catch (error) { 
-  return parseCallback(new Error(error), null);
-} 
-// IMAGE SEGMENTATION this is how we can swap out for LOCAL models, not internet ones.  so download them and bring them in locally
-  /*
+const loadModelDeepLab = async () => {
+  const modelName = 'pascal'; // set to your preferred model, either `pascal`, `cityscapes` or `ade20k`
+  const quantizationBytes = 2; // either 1, 2 or 4
+  // const url = 'https://tfhub.dev/tensorflow/tfjs-model/deeplab/pascal/1/default/1/model.json?tfjs-format=file';
+  // locally need to get the right model for each of these settings
+  const url = `${localModelURL}tensorflowlocal/deeplab/deeplab_pascal_1_default_1/model.json?tfjs-format=file`;
+  // return await deeplab.load({base: modelName, quantizationBytes});
+  const deeplabModel = await deeplab.load({ modelUrl: url, base: modelName, quantizationBytes });
+  return deeplabModel;
+};
+// load Deeplab - may wanna remove this
+// loadModelDeepLab().then(() => console.log(`Loaded the DeepLab successfully!`));
+const imageSegmentation = async (imageParse) => {
+// console.log(loadModelDeepLab);
+// x = tf.tensor4d([1, 2, 3, 4],[1,1,1,1])
+// for now we are just passing back the segments and "colors",
+// but we should pass back the map itself.
+  const legendResult = await loadModelDeepLab()
+    .then((model) => model.segment(tf.cast(imageParse, 'int32')))
+    .then(
+      ({ legend }) => legend,
+    ).catch((error) => {
+      console.log(error);
+    });
+  return legendResult;
+};
+// IMAGE SEGMENTATION this is how we can swap out for LOCAL models, not internet ones.
+// so download them and bring them in locally
+/*
     if we want to return the segmentation map
     return await loadModelDeepLab()
       .then((model) => model.segment(imageParse))
@@ -86,68 +74,66 @@ try {
         segmentationMap
       );
   */
-  //return await loadModelDeepLab.model.segment(imageParse);
-
+// return await loadModelDeepLab.model.segment(imageParse);
 
 // patch nodejs environment, we need to provide an implementation of
 // HTMLCanvasElement and HTMLImageElement, additionally an implementation
 // of ImageData is required, in case you want to use the MTCNN
 
-//FACE API is a useful face algo, but it doesn't play nice with TF 2.0
+// FACE API is a useful face algo, but it doesn't play nice with TF 2.0
 // implements nodejs wrappers for HTMLCanvasElement, HTMLImageElement, ImageData
 const canvas = require('canvas');
 const faceapi = require('face-api.js');
-const { Canvas, ImageData } = canvas
+
+const { Canvas, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
-faceapi.env.monkeyPatch({ fetch: fetch });
-//tmImage.env.monkeyPatch({ Canvas });
+faceapi.env.monkeyPatch({ fetch });
+// tmImage.env.monkeyPatch({ Canvas });
 
-
-//IMAGE SCENE
+// IMAGE SCENE
 module.exports = async function imageScene(img, parseCallback) {
-  console.log("imageScene");
+  console.log('imageScene');
   // console.log(process.memoryUsage());
-  //Expects TENSOR version of image...
+  // Expects TENSOR version of image...
   // console.log(typeof (img));
-  var analysisJSON = {};
-  if (typeof (img) == "object") {
-    //TIME OF DAY - use the image segmentation data. https://github.com/tensorflow/tfjs-models/tree/master/deeplab
+  const analysisJSON = {};
+  if (typeof (img) === 'object') {
+    // TIME OF DAY - use the image segmentation data. https://github.com/tensorflow/tfjs-models/tree/master/deeplab
     // analysisJSON['timeOfDay']={
     //  "tag": "morning",
     //   "salience": 0.88
     // };
 
-    //load expression model, then use in cropped face.
+    // load expression model, then use in cropped face.
     const timeofDayModel = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
     const timeofDayModelpredictions = await timeofDayModel.classify(img);
-    //console.log('day or night: ');
+    // console.log('day or night: ');
     // console.log(timeofDayModelpredictions);
-    analysisJSON['timeOfDay'] = timeofDayModelpredictions;
+    analysisJSON.timeOfDay = timeofDayModelpredictions;
 
-    //estimated year of photo
-    //DROP THIS MODEL IN
-    analysisJSON['mediaEstimatedCreationDate'] = 2018;
+    // estimated year of photo
+    // DROP THIS MODEL IN
+    analysisJSON.mediaEstimatedCreationDate = 2018;
 
-    //IMAGE SEGMENTATION is useful for Composition Assessments.
-    //had to force something in the deeplap tensorflow library... so watch out.
-    analysisJSON['composition'] = await imageSegmentation(img);
+    // IMAGE SEGMENTATION is useful for Composition Assessments.
+    // had to force something in the deeplap tensorflow library... so watch out.
+    analysisJSON.composition = await imageSegmentation(img, parseCallback);
 
     // Image/Scene Classifications
     // Load the model.
 
-    //const mn = mobilenet;
-    //mn.modelURL = `file://./models/mobilenet/model.json`
-    //const model= await mn.load({"modelUrl":"http://localhost:8080/mobilenet/model.json"})
-    //const model = await mobilenet.load('file://./models/mobilenet/model.json');
+    // const mn = mobilenet;
+    // mn.modelURL = `file://./models/mobilenet/model.json`
+    // const model= await mn.load({"modelUrl":"http://localhost:8080/mobilenet/model.json"})
+    // const model = await mobilenet.load('file://./models/mobilenet/model.json');
 
-    //const model = await tf.loadGraphModel('file://./models/mobilenet/model.json',{size:224})
+    // const model = await tf.loadGraphModel('file://./models/mobilenet/model.json',{size:224})
 
-    //had to get these to be local mobilenet pick ups...  
-    var modelConfig = {};
-    const model = await mobilenet.load(modelConfig = {
+    // had to get these to be local mobilenet pick ups...
+    const model = await mobilenet.load({
       version: 1,
       alpha: 1.0,
-      modelUrl: localModelURL + 'mobilenet/model.json?tfjs-format=file'
+      modelUrl: `${localModelURL}mobilenet/model.json?tfjs-format=file`,
     });
 
     // Classify the image.
@@ -155,13 +141,13 @@ module.exports = async function imageScene(img, parseCallback) {
 
     // console.log('Image Scene Predictions: ');
     // console.log(predictions);
-    analysisJSON['scenes'] = predictions;
+    analysisJSON.scenes = predictions;
 
-    return parseCallback(null, { 'imageScene': analysisJSON });
+    return parseCallback(null, { imageScene: analysisJSON });
   }
-  else {
-    analysisJSON['error'] = "no image scene parsed.";
-    return parseCallback(new Error("image object not supplied to function."), analysisJSON);
-  }
-  //return analysisJSON;
-}
+
+  analysisJSON.error = 'no image scene parsed.';
+  return parseCallback(new Error('image object not supplied to function.'), analysisJSON);
+
+  // return analysisJSON;
+};

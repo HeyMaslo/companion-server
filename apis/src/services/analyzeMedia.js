@@ -1,9 +1,8 @@
-"use strict";
-
-//traditional image processing and other media helpers
+/* eslint-disable no-console */
+// traditional image processing and other media helpers
 const { Image } = require('image-js');
 
-//TENSORFLOW JS makes it easy to do cheap things with small things
+// TENSORFLOW JS makes it easy to do cheap things with small things
 // https://www.npmjs.com/package/@tensorflow/tfjs-node
 // get almost any kind of model you want here: https://tfhub.dev/
 // the harder work, of course, is in the choices of integration and synthesis.
@@ -13,7 +12,6 @@ const tf = require('@tensorflow/tfjs-node');
 require('@tensorflow/tfjs-node');
 require('@tensorflow/tfjs-backend-cpu');
 require('@tensorflow/tfjs-backend-webgl');
-
 
 // const jpeg = require('jpeg-js');
 // const convert = async (img) => {
@@ -26,81 +24,72 @@ require('@tensorflow/tfjs-backend-webgl');
 
 //   for (let i = 0; i < numPixels; i++)
 //     for (let c = 0; c < numChannels; ++c)
-//       values[i * numChannels + c] = image.data[i * 4 + c]
+//     values[i * numChannels + c] = image.data[i * 4 + c]
 
 //   return tf.tensor3d(values, [image.height, image.width, numChannels], 'int32')
 // }
 
-
-//general cb error handler
-var cb = async function (error, retval) {
+// general cb error handler
+const cb = async function cb(error, retval) {
   if (error) {
     console.log(error);
-    return;
   }
   console.log(retval);
   return retval;
-}
+};
 
-//General Parser/Model Error Handler and Response parser
-var parseCallback = async function (error, retval) {
+// General Parser/Model Error Handler and Response parser
+const parseCallback = async function parseCallback(error, retval) {
   if (error) {
     console.log(error);
-    return retval;
   }
-  // console.log(retval);
   return retval;
-}
+};
 
 // Basic Image Data
-var imageMetadata = require('./libs/imageMetadata');
+const imageMetadata = require('./libs/imageMetadata');
 // IMAGE SCENE
-var imageScene = require('./libs/imageScene');
+const imageScene = require('./libs/imageScene');
 // OBJECT DETECTION
-var imageObjectDetection = require('./libs/imageObjectDetection');
+const imageObjectDetection = require('./libs/imageObjectDetection');
 // NSFW
-var imageNSFW = require('./libs/imageNSFW');
+const imageNSFW = require('./libs/imageNSFW');
 // POSES
-var imagePosing = require('./libs/imagePosing');
+const imagePosing = require('./libs/imagePosing');
 // FACIAL DETECTION and EXPRESSIONS
-var imageFaceDetection = require('./libs/imageFaceDetection');
+const imageFaceDetection = require('./libs/imageFaceDetection');
 // IMAGE SCENE
-var imageManipulation = require('./libs/imageManipulation');
+const imageManipulation = require('./libs/imageManipulation');
 
-
-
-//This function parses ALL OF IT
-var mediaParse = async function (originMediaID, img, modelsToCall) {
-
-  let analysisComplete = false;
-  let analysisJSON = {};
+// This function parses ALL OF IT
+const mediaParse = async function mediaParse(originMediaID, img, modelsToCall) {
+  const analysisJSON = {};
   let ImageBasics;
   let imgToParse;
 
-  //RESPOND BACK WITH ORIGINAL MEDIA ID
-  analysisJSON['originMediaID'] = originMediaID;
-  analysisJSON['mediaID'] = Date.now();
+  // RESPOND BACK WITH ORIGINAL MEDIA ID
+  analysisJSON.originMediaID = originMediaID;
+  analysisJSON.mediaID = Date.now();
 
-  //CONVERT IMAGE to image object for image-js... useful for many things
-  //SHRINK LARGE IMAGES
-  //CONVERT ALL image manipulations to sharp... 
+  // CONVERT IMAGE to image object for image-js... useful for many things
+  // SHRINK LARGE IMAGES
+  // CONVERT ALL image manipulations to sharp...
 
-  console.log("Image bytes / 1024: ", img.byteLength / 1024);
+  console.log('Image bytes / 1024: ', img.byteLength / 1024);
   try {
     if (img.byteLength / 1024 > 20000) {
       let imgB = await Image.load(img);
-      ImageBasics = imgB.resize({ factor: .3 });
+      ImageBasics = imgB.resize({ factor: 0.3 });
       imgB = null;
-      console.log(':: BEFORRE DECODE IMAGE:: ',process.memoryUsage());
-      imgToParse = tf.node.decodeImage(ImageBasics.toBuffer("jpg"), 3);
-      console.log(':: AFTER DECODE IMAGE:: ',process.memoryUsage());
-      console.log("Image Size: ", ImageBasics.size);
-    }
-    else {
+      console.log(':: BEFORRE DECODE IMAGE:: ', process.memoryUsage());
+      imgToParse = tf.node.decodeImage(ImageBasics.toBuffer('jpg'), 3);
+      console.log(':: AFTER DECODE IMAGE:: ', process.memoryUsage());
+      console.log('Image Size: ', ImageBasics.size);
+    } else {
       await tf.setBackend('tensorflow');
-      console.log(':: BEFORRE DECODE IMAGE:: ',process.memoryUsage());
+      console.log(':: BEFORRE DECODE IMAGE:: ', process.memoryUsage());
       imgToParse = tf.node.decodeImage(img, 3);
-      console.log(':: AFTER DECODE IMAGE:: ',process.memoryUsage());
+      console.log(':: AFTER DECODE IMAGE:: ', process.memoryUsage());
       ImageBasics = await Image.load(img);
     }
   } catch (error) {
@@ -108,78 +97,66 @@ var mediaParse = async function (originMediaID, img, modelsToCall) {
       error: true,
       message: error,
       statusCode: 500,
-      data: null
-    }
+      data: null,
+    };
   }
 
   /*
-    *****************************************************************  
+    *****************************************************************
     CALL THE MODELS.  Need to break these out.
     Im thinking just make a parameter that says ALL or which ones you want.
     TODO: gotta make model pre loaders on APP CREATION so this stuff goes much much faster
     *********************************************************************
   */
-  // console.log(typeof (modelsToCall));
-  // console.log("Models to call: ", modelsToCall);
 
-  let callModels = JSON.parse(modelsToCall);
-  
-  let promises = []
+  const callModels = JSON.parse(modelsToCall);
+  const promises = [];
 
-  //GET BASIC INFO ABOUT THE IMAGE
+  // GET BASIC INFO ABOUT THE IMAGE
   if (callModels.imageMeta) {
     promises.push(imageMetadata(img, parseCallback));
-
   }
 
-  //IMAGE SCENES
+  // IMAGE SCENES
   if (callModels.imageSceneOut) {
     promises.push(imageScene(imgToParse, parseCallback));
- 
   }
 
-  //IMAGE OBJECTS
+  // IMAGE OBJECTS
   if (callModels.imageObjects) {
     promises.push(imageObjectDetection(img, parseCallback));
-
   }
 
-  //NSFW and Person Clothed assessment
+  // NSFW and Person Clothed assessment
   if (callModels.imageTox) {
     promises.push(imageNSFW(imgToParse, parseCallback));
-
   }
 
-  //poses
+  // poses
   if (callModels.imagePose) {
     promises.push(imagePosing(imgToParse, parseCallback));
-
   }
 
-  //faces and recognition
-  if (callModels.faces) {    
+  // faces and recognition
+  if (callModels.faces) {
     promises.push(imageFaceDetection(img, parseCallback));
-
   }
 
-  //PHOTO FILTERS and MANIPULATIONS
-  //NEED TO FINISH TRAINING ON THIS
-  //was photo social media filtered?
+  // PHOTO FILTERS and MANIPULATIONS
+  // NEED TO FINISH TRAINING ON THIS
+  // was photo social media filtered?
   if (callModels.photoManipulation) {
     promises.push(imageManipulation(imgToParse, parseCallback));
   }
-  
-  let result;
-  
+
   tf.engine().startScope();
-  result = await Promise.all(promises).then((results) => {
-    analysisComplete = true;
+  const result = await Promise.all(promises).then((results) => {
     tf.dispose(imgToParse);
-    tf.disposeVariables(); 
-    tf.dispose(img);  
+    tf.disposeVariables();
+    tf.dispose(img);
     imgToParse = null;
     ImageBasics = null;
-    return results.reduce((acc,val) => { return Object.assign(acc, val); }, analysisJSON);
+    return results.reduce((acc, val) => Object.assign(acc, val), analysisJSON);
   }).catch((error) => {
     parseCallback(new Error(error), null);
   });
@@ -189,90 +166,80 @@ var mediaParse = async function (originMediaID, img, modelsToCall) {
     error: false,
     message: '',
     statusCode: 200,
-    data: result
-  }
+    data: result,
+  };
 };
 
-
 /**
- * 
+ *
  * Used by POST  /analyzeMedia
- * 
+ *
  */
-module.exports = async function analyzeMedia(request, response, next) {
-
-  //memory review
-  // console.log("Memory Usage: ", process.memoryUsage());
-
-  var modelsToCall = {
-    "imageMeta": 1,
-    "imageSceneOut": 1,
-    "imageObjects": 1,
-    "imageTox": 1,
-    "imagePose": 1,
-    "faces": 1,
-    "photoManipulation": 1
+module.exports = async function analyzeMedia(request, response) {
+  let modelsToCall = {
+    imageMeta: 1,
+    imageSceneOut: 1,
+    imageObjects: 1,
+    imageTox: 1,
+    imagePose: 1,
+    faces: 1,
+    photoManipulation: 1,
   };
 
-  if (request.file != undefined) {
-    if (!request.file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
-      request.fileValidationError = 'Only image files are allowed!';
-      response.send("gotta send image signal.")
-      return cb(new Error('Only image files are allowed!'), false);
-    }
-    else {
-      if (request.body.modelsToCall != undefined && request.body.modelsToCall != "" && request.body.modelsToCall != null) {
-        modelsToCall = request.body.modelsToCall;
-      }
-      var timeOut = request.body.timeOut;
-      var tO = 100000;
-      if (timeOut != null && timeOut != "") {
-        tO = parseInt(timeOut, 10);
-      }
-      else {
-        tO = 100000;
-      }
-
-      let isTimeOut = false;
-      // TODO: Improve timeout logic as it continues executing any async work already schedule in the loop
-      response.setTimeout(tO, () => {
-        response.sendStatus(408);
-        response.end();
-        isTimeOut = true;
-        return;
-      })
-
-      response.header("Access-Control-Allow-Origin", "*");
-
-      // console.log("Models to Call: ", modelsToCall)
-      try {
-        var originMediaID = request.body.originMediaID;
-        var fileBuffer = request.file.buffer;
-        var parsedMediaOut = await mediaParse(originMediaID, fileBuffer, modelsToCall);
-        fileBuffer = null;  
-        request.file.buffer = null;
-        if (parsedMediaOut.error) {
-          response.sendStatus(parsedMediaOut.statusCode);
-          cb(new Error(parsedMediaOut.message), null);
-        }
-      } catch (error) {
-        response.sendStatus(500);
-        console.error(error);
-      }
-      if (!isTimeOut) {
-        response.setHeader('Content-Type', 'application/json');
-        response.status(parsedMediaOut.statusCode);
-        response.send(parsedMediaOut.data);
-        response.removeAllListeners();
-        response.end()
-      } else {
-        cb(new Error('The request timed out'), null);
-      }
-      // return cb(null, "parsing now!");
-    }
-  }
-  else {
-    response.send("nothing to do without any signal. which is fine.")
+  if (request.file === undefined) {
+    response.send('nothing to do without any signal. which is fine.');
     return cb(new Error('no signal detected.'), false);
   }
-}
+
+  if (!request.file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+    request.fileValidationError = 'Only image files are allowed!';
+    response.send('gotta send image signal.');
+    return cb(new Error('Only image files are allowed!'), false);
+  }
+  if (request.body.modelsToCall !== undefined && request.body.modelsToCall !== '' && request.body.modelsToCall != null) {
+    modelsToCall = request.body.modelsToCall;
+  }
+  const { timeOut } = request.body;
+  let tO = 100000;
+  if (timeOut != null && timeOut !== '') {
+    tO = parseInt(timeOut, 10);
+  } else {
+    tO = 100000;
+  }
+
+  let isTimeOut = false;
+  // TODO: Improve timeout logic
+  // as it continues executing any async work already schedule in the loop
+  response.setTimeout(tO, () => {
+    response.sendStatus(408);
+    response.end();
+    isTimeOut = true;
+  });
+
+  response.header('Access-Control-Allow-Origin', '*');
+
+  let parsedMediaOut;
+  try {
+    const { originMediaID } = request.body;
+    let fileBuffer = request.file.buffer;
+    parsedMediaOut = await mediaParse(originMediaID, fileBuffer, modelsToCall);
+    fileBuffer = null;
+    request.file.buffer = null;
+    if (parsedMediaOut.error) {
+      response.sendStatus(parsedMediaOut.statusCode);
+      cb(new Error(parsedMediaOut.message), null);
+    }
+  } catch (error) {
+    response.sendStatus(500);
+    console.error(error);
+  }
+  if (!isTimeOut) {
+    response.setHeader('Content-Type', 'application/json');
+    response.status(parsedMediaOut.statusCode);
+    response.send(parsedMediaOut.data);
+    response.removeAllListeners();
+    response.end();
+    return cb(null, 'Completed');
+  }
+  return cb(new Error('The request timed out'), null);
+};

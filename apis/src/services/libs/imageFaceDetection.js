@@ -1,97 +1,91 @@
-"use strict";
 // Basic libraries for nodejs, express application
-global.fetch = require("node-fetch");
+// eslint-disable-next-line import/no-extraneous-dependencies
+global.fetch = require('node-fetch');
 
-//traditional image processing and other media helpers
+// traditional image processing and other media helpers
 const { Image } = require('image-js');
 
 // Tensorflow kernels and libraries
-//const tfN = require('@tensorflow/tfjs');
+// const tfN = require('@tensorflow/tfjs');
 const tf = require('@tensorflow/tfjs-node');
-//const tfG = require('@tensorflow/tfjs-node-gpu');
+// const tfG = require('@tensorflow/tfjs-node-gpu');
 require('@tensorflow/tfjs-backend-cpu');
 require('@tensorflow/tfjs-backend-webgl');
-const automl = require("@tensorflow/tfjs-automl");
+const automl = require('@tensorflow/tfjs-automl');
 
 // Tensflow trained models.
-//NOTE THAT SOME OF THESE ACCESS THE INTERNET BY DEFAULT.  Change that.
+// NOTE THAT SOME OF THESE ACCESS THE INTERNET BY DEFAULT.  Change that.
 const blazeface = require('@tensorflow-models/blazeface');
 const facemesh = require('@tensorflow-models/facemesh');
-
 
 // patch nodejs environment, we need to provide an implementation of
 // HTMLCanvasElement and HTMLImageElement, additionally an implementation
 // of ImageData is required, in case you want to use the MTCNN
 
-//FACE API is a useful face algo, but it doesn't play nice with TF 2.0
+// FACE API is a useful face algo, but it doesn't play nice with TF 2.0
 // implements nodejs wrappers for HTMLCanvasElement, HTMLImageElement, ImageData
 const canvas = require('canvas');
 const faceapi = require('face-api.js');
-const { Canvas, ImageData } = canvas
+
+const { Canvas, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
-faceapi.env.monkeyPatch({ fetch: fetch });
-//tmImage.env.monkeyPatch({ Canvas });
+faceapi.env.monkeyPatch({ fetch });
+// tmImage.env.monkeyPatch({ Canvas });
 
-//Final Express Application constants/variables
-//this is where we get the POST form parser set up
+// Final Express Application constants/variables
+// this is where we get the POST form parser set up
 
-//FACIAL DETECTION and EXPRESSIONS
-module.exports = async function imageFaceDetection (img, parseCallback) {
-  console.info("Starting Facial Detection", "imageFaces");
-  var analysisJSON = {};
-  if (typeof (img) == "object") {
-
+// FACIAL DETECTION and EXPRESSIONS
+module.exports = async function imageFaceDetection(img, parseCallback) {
+  console.info('Starting Facial Detection', 'imageFaces');
+  const analysisJSON = {};
+  if (typeof (img) === 'object') {
     const imgToParse = tf.node.decodeImage(img, 3);
     // const imgToParse4D = tf.node.decodeImage(img,3);
 
-    //CONVERT IMAGE to image object for image-js... useful for many things
-    let imageBasics = await Image.load(img);
+    // CONVERT IMAGE to image object for image-js... useful for many things
+    const imageBasics = await Image.load(img);
 
-    //old facemood     
-    //const URL = path.join(__dirname, '/models/tm-faceemotion/');
-    const URL = "http://localhost:8080/tm-faceemotion/"
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
-    const weightsURL = URL + "weights.bin";
-
-    //teachable Machines based Emotion Model
+    // old facemood
+    // const URL = path.join(__dirname, '/models/tm-faceemotion/');
+    // teachable Machines based Emotion Model
     // const emotionmodel = await tf.loadLayersModel(modelURL);
     // const emotionalTMpredictions = await emotionmodel.predict(imgToParse);
 
+    // emotionmodel = await tmImage.load(modelURL, metadataURL);
+    // const emotionalTMpredictions =await emotionmodel.predict(img);
+    // console.log("emotional from test faces:" + emotionalTMpredictions);
 
-    //emotionmodel = await tmImage.load(modelURL, metadataURL);
-    //const emotionalTMpredictions =await emotionmodel.predict(img);
-    //console.log("emotional from test faces:" + emotionalTMpredictions);
-
-    //blazeface
+    // blazeface
     // Load the model.
     let blazeFacePredictions;
     try {
       let bfmodel = await blazeface.load();
-  
+
       // Pass in an image or video to the model. The model returns an array of
-      // bounding boxes, probabilities, and landmarks, one for each detected face.  
+      // bounding boxes, probabilities, and landmarks, one for each detected face.
       const returnTensors = false; // Pass in `true` to get tensors back, rather than values.
       blazeFacePredictions = await bfmodel.estimateFaces(imgToParse, returnTensors);
       tf.dispose(bfmodel);
       bfmodel = null;
-    } catch (error) { 
+    } catch (error) {
       return parseCallback(new Error(error), null);
-    } 
+    }
 
-    //deal with summary metrics
-    analysisJSON['allFaces'] = blazeFacePredictions;
+    // deal with summary metrics
+    analysisJSON.allFaces = blazeFacePredictions;
 
-    //count faces up
-    analysisJSON['faceCount'] = blazeFacePredictions.length;
+    // count faces up
+    analysisJSON.faceCount = blazeFacePredictions.length;
 
-    //count persons... gotta refactor this to find bodies that may not have faces recognized... use the object recognizer or poses
-    analysisJSON['personsCount'] = blazeFacePredictions.length;
+    // count persons... gotta refactor this to find bodies that may not have faces recognized...
+    // use the object recognizer or poses
+    analysisJSON.personsCount = blazeFacePredictions.length;
 
     // get general emotions
     // gotta change what we're doing here.
     // duplicative
-    /* 
+    /*
       analysisJSON['emotionTags']=[
        {
          "tag": "smiling",
@@ -112,26 +106,20 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
       ];
     */
 
-    //TODO is detect the faces individually in an image and evaluate each face.
-    //AutoML Model for Facial Expression Classification
+    // TODO is detect the faces individually in an image and evaluate each face.
+    // AutoML Model for Facial Expression Classification
 
-    
-
-    var primarySubjectFaceVisible = { visibility: 0 };
+    let primarySubjectFaceVisible = { visibility: 0 };
     if (blazeFacePredictions[0]) {
-      analysisJSON['primarySubjectFaceVisible'] = blazeFacePredictions[0];
-    } else {
-      analysisJSON['primarySubjectFaceVisible'] = primarySubjectFaceVisible;
+      [primarySubjectFaceVisible] = blazeFacePredictions;
     }
+    analysisJSON.primarySubjectFaceVisible = primarySubjectFaceVisible;
 
-    var secondarySubjectFaceVisible = { visibility: 0 };
+    let secondarySubjectFaceVisible = { visibility: 0 };
     if (blazeFacePredictions[1]) {
-      var secondarySubjectFaceVisible = blazeFacePredictions[1];
-    } else {
-      analysisJSON['secondarySubjectFaceVisible'] = secondarySubjectFaceVisible;
+      [, secondarySubjectFaceVisible] = blazeFacePredictions;
     }
-
-
+    analysisJSON.secondarySubjectFaceVisible = secondarySubjectFaceVisible;
 
     if (blazeFacePredictions.length > 0) {
       /*
@@ -153,86 +141,84 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
         ]
       */
 
-      //NOTE that BlazeFace orders by highest probability face.  we may want a different logic for primary face.
-      analysisJSON['facialExpressions'] = [];
-      for (let i = 0; i < blazeFacePredictions.length; i++) {
+      // NOTE that BlazeFace orders by highest probability face.
+      // we may want a different logic for primary face.
+      analysisJSON.facialExpressions = [];
+      const facialExpressions = [];
+      const faceExpressionModel = await automl.loadImageClassification('http://localhost:8080/ferFace/model.json');
+      let genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
+      for (let i = 0; i < blazeFacePredictions.length; i += 1) {
         const start = blazeFacePredictions[i].topLeft;
         const end = blazeFacePredictions[i].bottomRight;
-        const size = [end[0] - start[0], end[1] - start[1]];
 
         // Render a rectangle over each detected face.
-        //ctx.fillRect(start[0], start[1], size[0], size[1]);
-        //useful for cropping for the detected faces
-        //clean up crop size issues.
+        // ctx.fillRect(start[0], start[1], size[0], size[1]);
+        // useful for cropping for the detected faces
+        // clean up crop size issues.
         if (imageBasics.width - end[0] < 0) {
-          end[0] = imageBasics.width
+          end[0] = imageBasics.width;
         }
         if (imageBasics.height - end[0] < 0) {
-          end[1] = imageBasics.height
+          end[1] = imageBasics.height;
         }
-        //console.log();
-        //console.log(imageBasics.height-end[1]);
-        var faceCrop = imageBasics.crop({
+
+        const faceCrop = imageBasics.crop({
           x: start[0],
           y: start[1],
           width: end[0] - start[0],
-          height: end[1] - start[1]
+          height: end[1] - start[1],
         });
 
-        //faceCrop.save('./imagesout/' + Date.now()+ "-" + i + '.png');
+        // faceCrop.save('./imagesout/' + Date.now()+ "-" + i + '.png');
 
         // console.log('faceCrop: ', faceCrop);
 
-        //face emotion test
-        console.debug('Start of Face Emotion Test')
-    
-        //load expression model, then use in cropped face.
-        let faceExpressionModelpredictions;
-        try { 
-          const faceExpressionModel = await automl.loadImageClassification('http://localhost:8080/ferFace/model.json');
-          faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop)
+        // face emotion test
+        console.debug('Start of Face Emotion Test');
+
+        // load expression model, then use in cropped face.
+        try {
+          facialExpressions.push(faceExpressionModel.classify(faceCrop)
             .then((res) => Promise.resolve(res))
             .catch((err) => {
               console.log('faceExpressionModel classify error', err);
-            });
-        } catch (error) { 
+            }));
+          // faceExpressionModelpredictions = await faceExpressionModel.classify(faceCrop)
+          //   .then((res) => Promise.resolve(res))
+          //   .catch((err) => {
+          //     console.log('faceExpressionModel classify error', err);
+          //   });
+        } catch (error) {
           return parseCallback(new Error(error), null);
         }
-        console.debug('End of Face Emotion Test')
+        console.debug('End of Face Emotion Test');
 
-        //console.log('faceExpressionModel: ');
-        //console.log(faceExpressionModelpredictions);
-        analysisJSON['facialExpressions'].push(faceExpressionModelpredictions);
-
-
-        if (i == 0) {
-          var tensor = tf.cast(tf.node.decodeImage(faceCrop.resize({ width: 96, height: 96 }).toBuffer(), 3), 'float32');
+        if (i === 0) {
+          let tensor = tf.cast(tf.node.decodeImage(faceCrop.resize({ width: 96, height: 96 }).toBuffer(), 3), 'float32');
           tensor = tensor.div(255.0);
           tensor = tensor.expandDims(0);
-          var genderresult;
+          let genderresult;
           try {
-            let genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
-            var genderresult = genderModel.predict(tensor);   
-            tf.dispose(genderModel);                     
-            genderModel = null;
-          } catch (error) {             
+            genderresult = genderModel.predict(tensor);
+          } catch (error) {
             return parseCallback(new Error(error), null);
-          } 
+          }
 
-          //convert the thresholds to a label.
+          // convert the thresholds to a label.
           const confidences = Array.from(genderresult.dataSync());
           const genderTypes = ['male', 'female'];
-          analysisJSON['primarySubjectGender'] = {
-            "tag": genderTypes[confidences.indexOf(Math.max(...confidences))],
-            "salience": genderresult.arraySync()
+          analysisJSON.primarySubjectGender = {
+            tag: genderTypes[confidences.indexOf(Math.max(...confidences))],
+            salience: genderresult.arraySync(),
           };
         }
-        //console.log(genderModel.predict(faceCrop));
       }
+      analysisJSON.facialExpressions = await Promise.all(facialExpressions);
+      tf.dispose(genderModel);
+      genderModel = null;
     }
 
-
-    //FACE MESH FOR FINER GRAIN
+    // FACE MESH FOR FINER GRAIN
     try {
       // Load the MediaPipe facemesh model.
       let facemeshmodel = await facemesh.load({ maxFaces: 3 });
@@ -273,10 +259,13 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
           ]
         */
 
-        analysisJSON["faceMesh"] = {};
-        for (let i = 0; i < predictions.length; i++) {
-          //const keypoints = predictions[i].faceInViewConfidence;
-          analysisJSON['faceMesh'] = { "faceinview": predictions[i].faceInViewConfidence, "boundingbox": predictions[i].boundingBox };
+        analysisJSON.faceMesh = {};
+        for (let i = 0; i < predictions.length; i += 1) {
+          // const keypoints = predictions[i].faceInViewConfidence;
+          analysisJSON.faceMesh = {
+            faceinview: predictions[i].faceInViewConfidence,
+            boundingbox: predictions[i].boundingBox,
+          };
           // Log facial keypoints.
           // for (let i = 0; i < keypoints.length; i++) {
           //   const [x, y, z] = keypoints[i];
@@ -285,16 +274,14 @@ module.exports = async function imageFaceDetection (img, parseCallback) {
           // }
         }
       }
-
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
 
     tf.dispose(imgToParse);
-    return parseCallback(null, {'faces' : analysisJSON});
+    return parseCallback(null, { faces: analysisJSON });
   }
-  else {
-    analysisJSON['error'] = "no image faces parsed.";
-    return parseCallback(new Error("image object not supplied to function."), analysisJSON);
-  }
-}
+
+  analysisJSON.error = 'no image faces parsed.';
+  return parseCallback(new Error('image object not supplied to function.'), analysisJSON);
+};
