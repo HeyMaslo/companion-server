@@ -7,11 +7,16 @@
   "engines": {
     "node": "^12.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^7.10.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.1"
+  },
   "scripts": {
     "start": "node .",
     "dev": "nodemon --inspect=0.0.0.0 src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint"
   },
   "author": "Maslo and Russell Foltz-Smith",
   "license": "MIT License",

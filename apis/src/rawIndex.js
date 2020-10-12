@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use strict";
 // Basic libraries for nodejs, express application
 const express = require('express');
