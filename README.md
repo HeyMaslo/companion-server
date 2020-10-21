@@ -10,6 +10,8 @@ authors: Russell Foltz-Smith @un1crom, Mark Ziler
 
   
 ## Overview
+A Companion’s existence gives us a reason to express ourselves, go on adventures, and learn who we are. Companions are similar to Assistants like Siri and Alexa, but with more emphasis on personal growth and development.
+
 Maslo Companion Server is a self contained signal processing and machine learning server deployable to major cloud providers and private data centers or to your local computer. 
 
 With Companion Server, developers are able to pass unstructured signals for the computer to observe. The server then returns insights about human interactions that can be incorporated into enhanced products. *Note: Original server was using lower level code with WolframEngine, python, tensorflow but it has been simplified and smallified for maintenance and portability reasons.*
