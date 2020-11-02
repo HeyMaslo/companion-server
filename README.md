@@ -21,7 +21,7 @@ The companion server can easily be attached to other systems by passing in image
 ## Use Cases  
 * Observing and understanding context in data
 * Tagging large corpus of content
-* Reorgnizating photos 
+* Reorganizing photos 
 * Analyzing company data
 * Making social media image filters
 * Learning and more... there are so many possibilities
