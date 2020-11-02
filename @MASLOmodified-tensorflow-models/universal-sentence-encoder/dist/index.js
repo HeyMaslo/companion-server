@@ -1,4 +1,5 @@
 "use strict";
+var port = process.env.PORT || 8080;
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -41,7 +42,7 @@ var tokenizer_1 = require("./tokenizer");
 exports.Tokenizer = tokenizer_1.Tokenizer;
 var version_1 = require("./version");
 exports.version = version_1.version;
-var BASE_PATH = 'http://localhost:8080/tensorflowlocal/use/'
+var BASE_PATH = `http://localhost:${port}/tensorflowlocal/use/`
 //var BASE_PATH = 'https://storage.googleapis.com/tfjs-models/savedmodel/universal_sentence_encoder/';
 function load() {
     return __awaiter(this, void 0, void 0, function () {
@@ -94,7 +95,7 @@ var UniversalSentenceEncoder = (function () {
     UniversalSentenceEncoder.prototype.loadModel = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2, tfconv.loadGraphModel('http://localhost:8080/tensorflowlocal/universal-sentence-encoder-lite_1_default_1/model.json')];
+                return [2, tfconv.loadGraphModel(`http://localhost:${port}/tensorflowlocal/universal-sentence-encoder-lite_1_default_1/model.json`)];
             });
         });
     };

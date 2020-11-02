@@ -24,7 +24,9 @@ const zlib = require('zlib');
 const jpeg = require('jpeg-js');
 const jsfeat = require('jsfeat');
 const sharp = require('sharp');
-const localModelURL = "http://localhost:8080/"
+
+const port = process.env.PORT || 8080;
+const localModelURL = `http://localhost:${port}/`
 
 
 //TENSORFLOW JS makes it easy to do cheap things with small things
@@ -597,7 +599,7 @@ var imageScene = async function(img, parseCallback) {
      // };
 
           //load expression model, then use in cropped face.
-          const timeofDayModel = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
+          const timeofDayModel = await automl.loadImageClassification(`http://localhost:${port}/dayandnight/model.json`);
           const timeofDayModelpredictions = await timeofDayModel.classify(img);
           //console.log('day or night: ');
          // console.log(timeofDayModelpredictions);

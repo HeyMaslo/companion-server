@@ -2,7 +2,7 @@
 global.fetch = require('node-fetch');
 
 // Config
-const port = 8080 || process.env.PORT;
+const port = process.env.PORT || 8080;
 const localModelURL = `http://localhost:${port}/`;
 
 require('@tensorflow/tfjs-backend-cpu');

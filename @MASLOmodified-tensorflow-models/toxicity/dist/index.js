@@ -1,4 +1,5 @@
 "use strict";
+var port = process.env.PORT || 8080;
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -66,7 +67,7 @@ var ToxicityClassifier = (function () {
     ToxicityClassifier.prototype.loadModel = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2, tfconv.loadGraphModel('http://localhost:8080/tensorflowlocal/toxicity_1_default_1/model.json')];
+                return [2, tfconv.loadGraphModel(`http://localhost:${port}/tensorflowlocal/toxicity_1_default_1/model.json`)];
                 //return [2, tfconv.loadGraphModel('https://tfhub.dev/tensorflow/tfjs-model/toxicity/1/default/1', { fromTFHub: true })];
             });
         });

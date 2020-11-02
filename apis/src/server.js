@@ -9,7 +9,7 @@ global.fetch = require('node-fetch');
 const path = require('path');
 
 // Config
-const port = 8080 || process.env.PORT;
+const port = process.env.PORT || 8080;
 // const localModelURL = `http://localhost:${port}/`;
 
 console.log(':: CPU COUNT: ', require('os').cpus().length);

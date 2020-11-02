@@ -32,6 +32,8 @@ faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 faceapi.env.monkeyPatch({ fetch });
 // tmImage.env.monkeyPatch({ Canvas });
 
+const port = process.env.PORT || 8080;
+
 // Final Express Application constants/variables
 // this is where we get the POST form parser set up
 
@@ -145,7 +147,7 @@ module.exports = async function imageFaceDetection(img, parseCallback) {
       // we may want a different logic for primary face.
       analysisJSON.facialExpressions = [];
       const facialExpressions = [];
-      const faceExpressionModel = await automl.loadImageClassification('http://localhost:8080/ferFace/model.json');
+      const faceExpressionModel = await automl.loadImageClassification(`http://localhost:${port}/ferFace/model.json`);
       let genderModel = await tf.loadLayersModel('file://./models/gender/model.json');
       for (let i = 0; i < blazeFacePredictions.length; i += 1) {
         const start = blazeFacePredictions[i].topLeft;

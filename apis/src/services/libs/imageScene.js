@@ -6,7 +6,7 @@ global.fetch = require('node-fetch');
 const { Image } = require('image-js');
 
 // Config
-const port = 8080 || process.env.PORT;
+const port = process.env.PORT || 8080;
 const localModelURL = `http://localhost:${port}/`;
 
 // TENSORFLOW JS makes it easy to do cheap things with small things
@@ -105,7 +105,7 @@ module.exports = async function imageScene(img, parseCallback) {
     // };
 
     // load expression model, then use in cropped face.
-    const timeofDayModel = await automl.loadImageClassification('http://localhost:8080/dayandnight/model.json');
+    const timeofDayModel = await automl.loadImageClassification(`${localModelURL}/dayandnight/model.json`);
     const timeofDayModelpredictions = await timeofDayModel.classify(img);
     // console.log('day or night: ');
     // console.log(timeofDayModelpredictions);
