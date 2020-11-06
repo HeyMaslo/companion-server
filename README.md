@@ -32,7 +32,7 @@ The companion server can easily be attached to other systems by passing in image
 
 You can run `docker-compose up --build` (within the `/apis` folder) which will start a container that will allow you to start developing locally. 
 
-It will run `nodemon` to start the server so any change should be reflected inmediately. 
+It will run `nodemon` to start the server so any change should be reflected immediately. 
 
 Make sure you are using the right port (you can change it on the `docker-compose.yml` file). It is set to map `41690` to `8080`.
 
@@ -93,7 +93,7 @@ REMEMBER THAT THE PORT 8080 will be forwarded from docker port!
 
 ##### Kubernetes
 
-For kubernets orchestration... standard approaches should work. This is a simple, stateless nodejs/expressjs container.
+For kubernetes orchestration... standard approaches should work. This is a simple, stateless nodejs/expressjs container.
 
 YAMLs for the kube/minikube spin up for testing:
 
@@ -140,16 +140,16 @@ Service
             ### dockerizing nodejs apps
 
 
-* Kubernets for the uninitiated
+* Kubernetes for the uninitiated
 https://learnk8s.io/nodejs-kubernetes-guide
 
-* Kubernets, nodejs, docker on Oracle Cloud
+* Kubernetes, nodejs, docker on Oracle Cloud
 https://medium.com/faun/how-to-deploy-a-express-node-js-app-on-kubernetes-and-an-intro-to-containerisation-205b5c647426
 
 * Automated builds to docker
 https://docs.docker.com/docker-hub/builds/
 
-* Make private repositories available to kubernets
+* Make private repositories available to kubernetes
 https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
 
 #### Public Clouds
@@ -192,14 +192,14 @@ ML Models
 * Faceland Mark Detection: https://github.com/tensorflow/tfjs-models/tree/master/facemesh
 * MediaPipe: https://github.com/google/mediapipe/tree/master/mediapipe/models
 * NSFW https://github.com/infinitered/nsfwjs#node-js-app
-* Gemder Model: https://github.com/bharathvaj1995/gender-detection-tensorflowjs
+* Gender Model: https://github.com/bharathvaj1995/gender-detection-tensorflowjs
 
 ##### Maslo Trained Models
 
 Maslo.ai trained some models directly
 
 * FerFace - a very basic model for classifying faces, using many of the available Fer datasets floating around: https://github.com/microsoft/FERPlus etc
-* OhotoManipulation - a very basic image classification dataset to classify photos manipulated by instagram, snapchat, photoshop etc.
+* PhotoManipulation - a very basic image classification dataset to classify photos manipulated by instagram, snapchat, photoshop etc.
 * Era of Photos - a large dataset of predicting what year/decade an image was created (using the qualities of the image without metadata)
 * Day or Night - simple classification of images from night or day.  could definitely ramp that up
 
@@ -209,7 +209,7 @@ Non ML signal processing
 
 
 #### Tested Models included or possibly going to be included
-Mostly Tensflow
+Mostly Tensorflow
 * Most obvious publicly available models for Tensorflow can be found here: https://tfhub.dev/
 * Image Scene: https://github.com/tensorflow/tfjs-models/tree/master/mobilenet
 * Object Detection: https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd
@@ -225,7 +225,7 @@ Mostly Tensflow
 * body part segmentation: https://github.com/tensorflow/tfjs-models/pull/63
 * MediaPipe: https://github.com/google/mediapipe/tree/master/mediapipe/models
 * NSFW https://github.com/infinitered/nsfwjs#node-js-app
-* Gemder Model: https://github.com/bharathvaj1995/gender-detection-tensorflowjs
+* Gender Model: https://github.com/bharathvaj1995/gender-detection-tensorflowjs
 * Sentiment: https://www.npmjs.com/package/sentiment
 
 
