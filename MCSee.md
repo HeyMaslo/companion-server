@@ -53,7 +53,14 @@ https://docs.google.com/spreadsheets/d/1-aJOOwlUdFxI79goz_U3NrdSvXyL-Szke0ClXemE
 ### Existing Maslo Platform Algorithm/Signal Modality Drilldown
 https://docs.google.com/spreadsheets/d/1lQS37kgDH1v0pdHKyWQse0NSxx0g1gkIsRi_mdUDKKM/edit#gid=441694671
 
+### Audio APIs for inspriation
+https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
 
+https://alemangui.github.io/pizzicato/
+
+https://howlerjs.com/
+
+http://joesul.li/van/beat-detection-using-web-audio/
 
 ### Audio
 
@@ -70,6 +77,11 @@ ogg?
 mVa?
 
 #### Metrics/Composite/Synthesis
+
+##### Speech to Text
+* google api: https://cloud.google.com/speech-to-text
+* wolfram function (can be deployed as API to wolframcloud): https://reference.wolfram.com/language/ref/SpeechRecognize.html
+* aws api: https://aws.amazon.com/transcribe/
 
 ##### Mood 
 
