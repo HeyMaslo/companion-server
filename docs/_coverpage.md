@@ -2,7 +2,7 @@
 
 ![logo](https://cdn-images-1.medium.com/max/1600/1*Gm7A7w4vJZeNXKHJQxhq7Q.gif)
 
-# maslo companion server <small>1.02</small>
+# maslo companion server <small>1.08</small>
 
 > An AI Companion Server
 
