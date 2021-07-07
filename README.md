@@ -115,7 +115,7 @@ Deployment
         spec:
         containers:
             - name: app
-            image: un1crom/maslocompanionserver:1.0.8
+            image: heymaslo/maslocompanionserver:1.0.8
             ports:
                 - containerPort: 8080
             imagePullPolicy: Always
@@ -156,12 +156,16 @@ https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecre
 * Kubernetes on google cloud
 https://codelabs.developers.google.com/codelabs/cloud-running-a-nodejs-container/index.html?index=..%2F..index
 
+
+* Kubernetes / docker on AWS
+https://www.eksworkshop.com/beginner/050_deploy/applications/
+
 ## Smoke Test
 
 The smoke-test directory includes JavaScript for iterating through a directory of images and writing out the resulting JSON to a local file.  Please open index.js and adjust the paths to your image directory, JSON output file, and any other parameters you'd like to adjust.  Then run from the command line: `node index.js`  
 
 ## API
-Head to the docs folder or https://heymaslo.github.io/companionserver/#/ for full documentation on the APIs.
+Head to the docs folder or https://heymaslo.github.io/companion-server/ for full documentation on the APIs.
 
 ## NodeJS, ExpressJS, and Tensorflow
 The package.json has all the details on what's in play. *Please note there are sometimes bugs in NPM modules.*
