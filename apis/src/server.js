@@ -21,6 +21,7 @@ console.log(':: CPU COUNT: ', require('os').cpus().length);
 // Grab functionalities
 const analyzeMedia = require('./services/analyzeMedia');
 const { analyzeText } = require('./services/analyzeText');
+const analyzeAudio = require('./services/analyzeAudio');
 const respondWithExampleJSON = require('./services/exampleJSON');
 
 // this is where we get the POST form parser set up
@@ -54,7 +55,7 @@ app.use((err, req, res, next) => {
 app.get('/', (req, res) => res.send('Hey! I am maslo! <br />Go to the <a href="/playground">Playground!</a>'));
 
 /**
- * GET  /
+ * GET  /playground
  */
 app.get('/playground', (req, res) => res.sendFile(path.join(`${__dirname}/views/playground.html`)));
 
@@ -73,5 +74,12 @@ app.post('/analyzeMedia', upload.single('media'), async (req, res, next) => anal
  */
 app.post('/analyzeText', upload.single('media'), (req, res) => analyzeText(req, res));
 
-// SET THE APP to LISTEN FOR REQUESTS
-app.listen(port, () => console.log(`Maslo Companion Server at http://localhost:${port}`));
+/**
+ * POST /analyzeAudio
+ */
+app.post('/analyzeAudio', upload.single('audio'), (req, res) => {
+  return analyzeAudio(req, res);
+});
+
+//SET THE APP to LISTEN FOR REQUESTS
+app.listen(port, () => console.log(`Maslo Companion Server at http://localhost:${port}`))
