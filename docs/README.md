@@ -5,7 +5,6 @@
 ## Overview of the APIs
 Maslo Companion Server is a set of signal processing APIs for various types of data.  
   
-### Features:
 * Response formats: JSON  
 * Requires Authentication? Yes (user context only)  
 * Rate limited? Yes, but up to you
