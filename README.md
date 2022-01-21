@@ -1,8 +1,6 @@
 ![A Server For Every Signal](https://github.com/HeyMaslo/companionserver/blob/master/.github/maslo_companion_server.001.jpeg)
 
 # Maslo Companion Server
-version: 1.0.8   
-authors: Russell Foltz-Smith @un1crom, Mark Ziler 
 
 ![GitHub stars](https://img.shields.io/github/stars/heymaslo/companion-server?style=social)
 [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](https://github.com/Naereen/badges/)
