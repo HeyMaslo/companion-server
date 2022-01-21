@@ -1,28 +1,23 @@
-# @heymaslo/companionserver
+# @heymaslo/companion-server
 
 ![](https://cdn-images-1.medium.com/max/1600/1*Gm7A7w4vJZeNXKHJQxhq7Q.gif)
 
-version: 1.0.8  
-authors: Russel Foltz-Smith, Mark Ziler
-
 ## Overview of the APIs
-Maslo Companion Server is a set of signal processing APIs for numerous types of data  
+Maslo Companion Server is a set of signal processing APIs for various types of data.  
   
-Response formats: JSON  
-Requires Authentication? Yes (user context only)  
-Rate limited? Yes, but up to you
-Request Formats: Requests should be either multipart/form-data or application/x-www-form-urlencoded or application/json POST formats 
+### Features:
+* Response formats: JSON  
+* Requires Authentication? Yes (user context only)  
+* Rate limited? Yes, but up to you
+* Request Formats: Requests should be either multipart/form-data or application/x-www-form-urlencoded or application/json POST formats 
 
 ### Limits and Assumptions
 
-Right now the default setting is a 10 second timeout for any response.
+* Timeout: Right now the default setting is a 10 second timeout for any response.
+* File Size: There's no file size limit, but once you get above 20MB image files you get much slower responses and will need to hit individual facet APIs.
 
-There's no file size limit really, but once you get above 20MB image files you get much slower responses, and will need to hit individual facet APIs
-
-## TODOS as of 9/15/2020
-
-* improve handling of timeouts to return partial JSON for models which have completed in time  
-
+## Known Issues
+* Improve handling of timeouts to return partial JSON for models which have completed in time  
   
 ## AnalyzeMedia  
 
@@ -36,7 +31,7 @@ API endpoint: /analyzeMedia  POST
 | media | Yes | Raw binary of file to be uploaded.  Can include multiple, each to be analyzed individually. | Any image file | Max size: `30MB/file`.<br>  Limited to image files currently in format `jpeg, jpg, png, gif`. |
 | type | Yes | Type of media, as a backstop for mimetype detection problems.  values: image, video, audio. |  `"image/jpeg"` |  |
 | originMediaID | No | originMediaID to be passed back in response. (guid) | `062fea4d-efdd-4a7f-92b1-4039503efd5b` | `guid` or `int` |
-| modelsToCall | No | the models you want to call on your image(s) | `{"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}` | Available models: `imageMeta`, `imageSceneOut`, `imageObjects`, `imageTox`, `imagePose`, `faces`, `photoManipulation`.<br><br> If not included, all models will be on by default |
+| modelsToCall | No | the models you want to call on your image(s) | `{"imageMeta": 1,"imageSceneOut": 1,"imageObjects": 1,"imageTox": 1,"imagePose": 1,"faces": 1,"photoManipulation": 1}` | Available models: `imageMeta`, `imageSceneOut`, `imageObjects`, `imageTox`, `imagePose`, `faces`, `photoManipulation`.<br><br> If not included, all models will be on by default. |
 | timeOut | No | time in milliseconds to let models run | `100000` | `int` |
 
 **Sample cURL Post:**  
@@ -359,8 +354,7 @@ curl --location --request POST 'localhost:8080/analyzeText' \
 | photoFilter |  |  Tags identifying common social media/artificial filters, with salience values | `{"tag": "instagram","salience": 0.98}` |  |
 
 ### Errors:  
-(will be included in response object, if desired.)  
-
+_Can be included in response object, if desired._
 * 408 Requestion Time out
 * 404/unfound URI
 * MALFORMED REQUEST--log details within Maslo API logs, rather than returning verbose error response
@@ -495,7 +489,6 @@ curl --location --request POST 'localhost:8080/analyzeText' \
 
 ## AnalyzeText  
 **Purpose:** AnalyzeText accepts text samples and returns detailed signal analysis on tone/sentiment and grammar and vocabulary sophistication.
-
 
 API endpoint: /analyzeText  POST  
 
@@ -697,7 +690,7 @@ request(options, function (error, response) {
 
 
 ### Errors:  
-(will be included in response object)  
+_Will be included in response object._ 
 
 * 404/unfound URI
 * MALFORMED REQUEST--log details within Maslo API logs, rather than returning verbose error response
