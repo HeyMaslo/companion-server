@@ -12,5 +12,5 @@
 - Stateless - it just does things
 - Fun and Empathetic for use in making the world better
 
-[GitHub](https://github.com/HeyMaslo/companionserver)
-[Get Started](#heymaslocompanionserver)
+[GitHub](https://github.com/HeyMaslo/companion-server)
+[Get Started](#heymaslocompanion-server)
